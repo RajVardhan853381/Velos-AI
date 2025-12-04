@@ -1,0 +1,460 @@
+2025-12-04 18:22:48.022828: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/media/raj/Raj/Hackathon/trustflow/server.py:453: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Will watch for changes in these directories: ['/media/raj/Raj/Hackathon/trustflow']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [6704] using StatReload
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+2025-12-04 18:23:14.981775: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+INFO:     Started server process [6922]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/usr/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+
+==================================================
+🚀 TrustFlow Server Starting...
+==================================================
+✅ FastAPI server initialized
+✅ Orchestrator: Connected
+✅ Zynd Protocol: Connected
+✅ GROQ API: Connected
+==================================================
+📡 API Endpoints:
+   GET  /              - Frontend UI
+   GET  /api/status    - System status
+   GET  /api/stats     - Dashboard stats
+   GET  /api/agents    - Agent info
+   GET  /api/audit     - Audit trail
+   POST /api/verify    - Verify candidate
+==================================================
+
+WARNING:  StatReload detected changes in 'utils/resume_parser.py'. Reloading...
+2025-12-04 21:22:12.788878: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+INFO:     Started server process [12919]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/usr/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Process SpawnProcess-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+
+==================================================
+🚀 TrustFlow Server Starting...
+==================================================
+✅ FastAPI server initialized
+✅ Orchestrator: Connected
+✅ Zynd Protocol: Connected
+✅ GROQ API: Connected
+==================================================
+📡 API Endpoints:
+   GET  /              - Frontend UI
+   GET  /api/status    - System status
+   GET  /api/stats     - Dashboard stats
+   GET  /api/agents    - Agent info
+   GET  /api/audit     - Audit trail
+   POST /api/verify    - Verify candidate
+==================================================
+
+2025-12-04 21:22:48.246817: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+INFO:     Started server process [12988]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/usr/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+⚠️ pdfplumber not installed. PDF parsing disabled.
+⚠️ python-docx not installed. DOCX parsing disabled.
+⚠️ pytesseract/Pillow not installed. OCR disabled.
+⚠️ pdf2image not installed. PDF OCR fallback disabled.
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+
+==================================================
+🚀 TrustFlow Server Starting...
+==================================================
+✅ FastAPI server initialized
+✅ Orchestrator: Connected
+✅ Zynd Protocol: Connected
+✅ GROQ API: Connected
+==================================================
+📡 API Endpoints:
+   GET  /              - Frontend UI
+   GET  /api/status    - System status
+   GET  /api/stats     - Dashboard stats
+   GET  /api/agents    - Agent info
+   GET  /api/audit     - Audit trail
+   POST /api/verify    - Verify candidate
+==================================================
+
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+2025-12-04 21:23:53.737214: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+INFO:     Started server process [13034]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/usr/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+⚠️ pdfplumber not installed. PDF parsing disabled.
+⚠️ python-docx not installed. DOCX parsing disabled.
+⚠️ pytesseract/Pillow not installed. OCR disabled.
+⚠️ pdf2image not installed. PDF OCR fallback disabled.
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+
+==================================================
+🚀 TrustFlow Server Starting...
+==================================================
+✅ FastAPI server initialized
+✅ Orchestrator: Connected
+✅ Zynd Protocol: Connected
+✅ GROQ API: Connected
+==================================================
+📡 API Endpoints:
+   GET  /              - Frontend UI
+   GET  /api/status    - System status
+   GET  /api/stats     - Dashboard stats
+   GET  /api/agents    - Agent info
+   GET  /api/audit     - Audit trail
+   POST /api/verify    - Verify candidate
+==================================================
+
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+2025-12-04 21:24:29.289970: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+INFO:     Started server process [13095]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/raj/.local/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/usr/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Process SpawnProcess-5:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/_compat.py", line 53, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 86, in _serve
+    await self.startup(sockets=sockets)
+  File "/home/raj/.local/lib/python3.10/site-packages/uvicorn/server.py", line 136, in startup
+    server = await loop.create_server(create_protocol, sock=sock, ssl=config.ssl, backlog=config.backlog)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1540, in create_server
+    server._start_serving()
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 318, in _start_serving
+    sock.listen(self._backlog)
+OSError: [Errno 98] Address already in use
+⚠️ pdfplumber not installed. PDF parsing disabled.
+⚠️ python-docx not installed. DOCX parsing disabled.
+⚠️ pytesseract/Pillow not installed. OCR disabled.
+⚠️ pdf2image not installed. PDF OCR fallback disabled.
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+ℹ️ Using Zynd Protocol compatibility layer
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+✅ Resume Parser initialized (PDF/DOCX/OCR)
+✅ Zynd Protocol agents registered
+✅ TrustFlow Orchestrator initialized
+✅ Zynd Protocol connected
+
+==================================================
+🚀 TrustFlow Server Starting...
+==================================================
+✅ FastAPI server initialized
+✅ Orchestrator: Connected
+✅ Zynd Protocol: Connected
+✅ GROQ API: Connected
+✅ Resume Parser: Ready (PDF/DOCX/OCR)
+==================================================
+📡 API Endpoints:
+   GET  /                  - Frontend UI
+   GET  /api/status        - System status
+   GET  /api/stats         - Dashboard stats
+   GET  /api/agents        - Agent info
+   GET  /api/audit         - Audit trail
+   POST /api/verify        - Verify candidate (JSON)
+   POST /api/upload-resume - Upload & parse resume file
+   POST /api/verify-file   - Upload & verify resume file
+   GET  /api/parser-status - Parser capabilities
+   GET  /docs              - Swagger API Documentation
+==================================================
+
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+INFO:     Stopping reloader process [6704]
