@@ -1,5 +1,5 @@
 """
-TrustFlow: Decentralized Blind Hiring Protocol
+Velos: Decentralized Blind Hiring Protocol
 Main Streamlit Application with Zynd Protocol Integration
 
 Run with: streamlit run app.py
@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Import TrustFlow components
-from agents.orchestrator import TrustFlowOrchestrator
+# Import Velos components
+from agents.orchestrator import VelosOrchestrator
 from agents.god_mode import GodModeDashboard
 from database.storage import AuditLog
 
@@ -36,7 +36,7 @@ except ImportError:
 
 # ============ PAGE CONFIG ============
 st.set_page_config(
-    page_title="TrustFlow: Blind Hiring",
+    page_title="Velos: Blind Hiring",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -119,7 +119,7 @@ st.markdown("""
 def init_session_state():
     """Initialize session state variables"""
     if "orchestrator" not in st.session_state:
-        st.session_state.orchestrator = TrustFlowOrchestrator()
+        st.session_state.orchestrator = VelosOrchestrator()
     
     if "candidate_data" not in st.session_state:
         st.session_state.candidate_data = None
@@ -138,7 +138,7 @@ def render_header():
     """Render main header"""
     st.markdown("""
     <div class="header-gradient">
-        <h1 style="color: white; margin: 0; font-size: 42px;">⚖️ TrustFlow</h1>
+        <h1 style="color: white; margin: 0; font-size: 42px;">⚖️ Velos</h1>
         <p style="color: #e0e0e0; margin: 8px 0 0 0; font-size: 18px;">
             Decentralized Blind Hiring Protocol
         </p>
@@ -699,7 +699,7 @@ with tab4:
 st.divider()
 st.markdown("""
 <div style="text-align: center; color: #666; padding: 20px;">
-    <p><strong>⚖️ TrustFlow</strong> - Decentralized Blind Hiring Protocol</p>
+    <p><strong>⚖️ Velos</strong> - Decentralized Blind Hiring Protocol</p>
     <p style="font-size: 14px; color: #9090ff;">
         🔗 Powered by <strong>Zynd Protocol</strong> | 
         🛡️ Decentralized Identities | 

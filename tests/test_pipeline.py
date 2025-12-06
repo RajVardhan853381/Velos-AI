@@ -1,5 +1,5 @@
 """
-Integration Tests for TrustFlow Pipeline
+Integration Tests for Velos Pipeline
 Tests the complete verification flow from resume to decision.
 """
 
@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agents.agent_1_gatekeeper import BlindGatekeeper
 from agents.agent_2_validator import SkillValidator
 from agents.agent_3_inquisitor import Inquisitor
-from agents.orchestrator import TrustFlowOrchestrator
+from agents.orchestrator import VelosOrchestrator
 from utils.pii_redactor import PIIRedactor
 from utils.experience_extractor import ExperienceExtractor
 from database.storage import AuditLog
@@ -300,7 +300,7 @@ def test_full_pipeline():
     with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
         db_path = f.name
     
-    orchestrator = TrustFlowOrchestrator(db_path)
+    orchestrator = VelosOrchestrator(db_path)
     
     # Run pipeline
     result = orchestrator.run_verification_pipeline(
@@ -343,7 +343,7 @@ def test_full_pipeline():
 def run_all_tests():
     """Run all tests"""
     print("\n" + "="*60)
-    print("TRUSTFLOW TEST SUITE")
+    print("VELOS TEST SUITE")
     print("="*60)
     
     tests = [
@@ -380,7 +380,7 @@ def run_all_tests():
     print(f"\n   Total: {passed}/{total} tests passed")
     
     if passed == total:
-        print("\n🎉 ALL TESTS PASSED! TrustFlow is ready to ship! 🚀")
+        print("\n🎉 ALL TESTS PASSED! Velos is ready to ship! 🚀")
     else:
         print(f"\n⚠️  {total - passed} test(s) failed. Please review.")
     

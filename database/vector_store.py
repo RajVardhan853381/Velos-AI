@@ -1,5 +1,5 @@
 """
-TrustFlow - Resume Vector Store
+Velos - Resume Vector Store
 Implements RAG (Retrieval Augmented Generation) for contextual memory.
 
 Uses ChromaDB for vector storage and sentence-transformers for embeddings.
@@ -399,7 +399,7 @@ class ResumeVectorStore:
             self.client.delete_collection(self.COLLECTION_NAME)
             self.collection = self.client.create_collection(
                 name=self.COLLECTION_NAME,
-                metadata={"description": "TrustFlow candidate resume chunks"}
+                metadata={"description": "Velos candidate resume chunks"}
             )
             return True
         except Exception as e:

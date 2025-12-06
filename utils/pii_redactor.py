@@ -1,5 +1,5 @@
 """
-PII Redactor Utility for TrustFlow
+PII Redactor Utility for Velos
 Uses spaCy NER + regex to remove personally identifiable information
 """
 

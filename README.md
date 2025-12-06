@@ -1,4 +1,4 @@
-# TrustFlow: Decentralized Blind Hiring Protocol
+# Velos: Decentralized Blind Hiring Protocol
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python" />
@@ -17,7 +17,7 @@
 
 ## 🎯 Overview
 
-**TrustFlow** is a decentralized multi-agent AI system that eliminates bias AND catches resume fraud in hiring. Built for the **ZYND AIckathon 2025 - Fair Hiring Network** challenge with full **Zynd Protocol integration**.
+**Velos** is a decentralized multi-agent AI system that eliminates bias AND catches resume fraud in hiring. Built for the **ZYND AIckathon 2025 - Fair Hiring Network** challenge with full **Zynd Protocol integration**.
 
 ### The Problem
 
@@ -37,7 +37,7 @@
 
 ## 🔗 Zynd Protocol Integration
 
-TrustFlow implements the core Zynd Protocol concepts:
+Velos implements the core Zynd Protocol concepts:
 
 ### 🆔 Decentralized Identities (DIDs)
 ```
@@ -72,7 +72,7 @@ did:zynd:candidate:cand_xyz789
 
 ```bash
 # 1. Clone/download the project
-cd trustflow
+cd velos
 
 # 2. Create virtual environment
 python -m venv venv
@@ -151,7 +151,7 @@ Final Decision + Verifiable Credentials + Full Audit Trail
 ## 📁 Project Structure
 
 ```
-trustflow/
+velos/
 ├── app.py                      # Main Streamlit application
 ├── requirements.txt            # Python dependencies
 ├── .env                        # Environment variables
@@ -240,7 +240,7 @@ credential = zynd_protocol.issue_credential(
 
 ## 🔍 Bias Detection
 
-TrustFlow includes automatic bias detection in job descriptions:
+Velos includes automatic bias detection in job descriptions:
 
 ### Detected Bias Types
 
@@ -322,7 +322,7 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ---
 
-## 🏆 Why TrustFlow Wins
+## 🏆 Why Velos Wins
 
 ### Technical Excellence
 - ✅ **Full Zynd Protocol Implementation**: DIDs, Verifiable Credentials, Agent Registry
@@ -372,7 +372,7 @@ Built for **ZYND AIckathon 2025** - Fair Hiring Network Challenge
 ---
 
 <p align="center">
-  <strong>TrustFlow: Fair hiring isn't about replacing humans—it's about removing bias so humans make better decisions.</strong>
+  <strong>Velos: Fair hiring isn't about replacing humans—it's about removing bias so humans make better decisions.</strong>
 </p>
 
 <p align="center">

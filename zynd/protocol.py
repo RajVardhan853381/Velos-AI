@@ -1,5 +1,5 @@
 """
-Zynd Protocol Implementation for TrustFlow
+Zynd Protocol Implementation for Velos
 Compatible wrapper that mirrors the official zyndai-agent API (v0.1.5)
 
 This implementation provides:
@@ -567,7 +567,7 @@ class ZyndProtocol:
         agent_info: AgentSearchResponse = {
             "id": str(uuid.uuid4()),
             "name": did_document.get("credentialSubject", {}).get("name", "Unknown"),
-            "description": f"TrustFlow agent with capabilities: {capabilities}",
+            "description": f"Velos agent with capabilities: {capabilities}",
             "mqttUri": None,
             "inboxTopic": f"{did}/inbox",
             "matchScore": 100,
@@ -762,7 +762,7 @@ def get_protocol_instance():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Zynd Protocol - TrustFlow Compatibility Layer")
+    print("Zynd Protocol - Velos Compatibility Layer")
     print("=" * 60)
     
     # Create protocol instance

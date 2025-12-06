@@ -25,7 +25,7 @@ class LedgerManager:
     - Integrity verification
     """
     
-    def __init__(self, agent_id: str = "TrustFlow-v1"):
+    def __init__(self, agent_id: str = "Velos-v1"):
         """
         Initialize the ledger manager.
         
@@ -237,7 +237,7 @@ class LedgerManager:
 
 # Quick test
 if __name__ == "__main__":
-    ledger = LedgerManager(agent_id="TrustFlow-Test")
+    ledger = LedgerManager(agent_id="Velos-Test")
     
     # Simulate a pipeline result
     decision_data = {

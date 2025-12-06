@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrustFlow - Decentralized Blind Hiring</title>
+    <title>Velos - Decentralized Blind Hiring</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -1027,7 +1027,7 @@
                 <div class="logo">
                     <div class="logo-icon">⚖️</div>
                     <div class="logo-text">
-                        <h1>TrustFlow</h1>
+                        <h1>Velos</h1>
                         <p>Blind Hiring</p>
                     </div>
                 </div>
@@ -1037,7 +1037,7 @@
             </div>
 
             <ul class="nav-menu">
-                <li class="nav-section-title">About TrustFlow</li>
+                <li class="nav-section-title">About Velos</li>
                 <li class="nav-item active" onclick="switchTab(event, 'about')">
                     <span>📋</span>
                     <span>Overview</span>
@@ -1112,7 +1112,7 @@
             <header class="header">
                 <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
                     <span>🏆</span>
-                    <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">About TrustFlow</span>
+                    <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">About Velos</span>
                 </div>
                 <div class="header-nav">
                     <button class="header-nav-btn" onclick="switchTabHeader(event, 'verify')">✓ Verify Candidate</button>
@@ -1133,7 +1133,7 @@
                     <div class="hero-content">
                         <div class="hero-icon">⚖️</div>
                         <div class="hero-text">
-                            <h2>TrustFlow</h2>
+                            <h2>Velos</h2>
                             <p>Decentralized Blind Hiring Protocol</p>
                         </div>
                     </div>
@@ -1143,7 +1143,7 @@
                     <h3 style="color: var(--text-primary); margin-bottom: 16px; font-size: 16px;">What's the deal?</h3>
                     <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px;">Build AI agents that actually talk to each other and solve real problems together. Think beyond solo AI—we're talking networks, collaboration, decentralized intelligence.</p>
                     
-                    <h3 style="color: var(--text-primary); margin-bottom: 12px; font-size: 14px; margin-top: 20px;">TrustFlow solves two critical hiring problems:</h3>
+                    <h3 style="color: var(--text-primary); margin-bottom: 12px; font-size: 14px; margin-top: 20px;">Velos solves two critical hiring problems:</h3>
                     <ol style="color: var(--text-secondary); margin-left: 20px; line-height: 2;">
                         <li style="margin-bottom: 8px;"><strong style="color: var(--primary-light);">Bias in AI Hiring</strong> → Anonymize data before evaluation</li>
                         <li><strong style="color: var(--primary-light);">Resume Fraud</strong> → Verify authenticity via technical questions</li>
@@ -2319,7 +2319,7 @@ Responsibilities:
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 TrustFlow Frontend Initialized');
+            console.log('🚀 Velos Frontend Initialized');
             
             // Check API connection
             try {
@@ -2783,7 +2783,7 @@ Responsibilities:
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `trustflow_report_${new Date().toISOString().split('T')[0]}.csv`;
+                a.download = `velos_report_${new Date().toISOString().split('T')[0]}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);

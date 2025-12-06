@@ -1,5 +1,5 @@
 """
-Database Storage for TrustFlow
+Database Storage for Velos
 SQLite-based audit logging for full traceability.
 """
 
@@ -16,7 +16,7 @@ class AuditLog:
     Tracks all candidate verifications and agent decisions.
     """
     
-    def __init__(self, db_path: str = "trustflow_audit.db"):
+    def __init__(self, db_path: str = "velos_audit.db"):
         self.db_path = db_path
         self.conn: Optional[sqlite3.Connection] = None
         self._connect()

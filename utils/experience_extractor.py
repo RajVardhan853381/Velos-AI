@@ -1,5 +1,5 @@
 """
-Experience Extractor Utility for TrustFlow
+Experience Extractor Utility for Velos
 Uses LLM to extract years of professional experience from resume text
 """
 

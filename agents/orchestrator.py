@@ -85,9 +85,9 @@ class CandidateProfile:
     created_at: str
 
 
-class TrustFlowOrchestrator:
+class VelosOrchestrator:
     """
-    Orchestrates the TrustFlow verification pipeline with Zynd Protocol.
+    Orchestrates the Velos verification pipeline with Zynd Protocol.
     
     Pipeline flow:
     1. Agent 1 (Gatekeeper): Eligibility + PII removal + DID creation
@@ -104,7 +104,7 @@ class TrustFlowOrchestrator:
     - VerifiableCredential: W3C credentials issued at each stage
     """
     
-    def __init__(self, db_path: str = "trustflow_audit.db"):
+    def __init__(self, db_path: str = "velos_audit.db"):
         # Initialize Zynd Protocol if available
         self.protocol: Optional[Any] = None
         self.agent1_identity: Optional[Dict[str, Any]] = None
@@ -149,7 +149,7 @@ class TrustFlowOrchestrator:
         if TRUST_LAYER_AVAILABLE:
             try:
                 self.diff_engine = DiffEngine()
-                self.ledger_manager = LedgerManager(agent_id="TrustFlow-Orchestrator")
+                self.ledger_manager = LedgerManager(agent_id="Velos-Orchestrator")
                 print("✅ Trust layer initialized (visual + crypto proofs enabled)")
             except Exception as e:
                 print(f"⚠️ Trust layer init failed: {e}")
@@ -776,7 +776,7 @@ class TrustFlowOrchestrator:
 
 # Quick test
 if __name__ == "__main__":
-    orchestrator = TrustFlowOrchestrator("test_orchestrator.db")
+    orchestrator = VelosOrchestrator("test_orchestrator.db")
     
     sample_resume = """
     John Doe
@@ -822,7 +822,7 @@ if __name__ == "__main__":
     
     # Run pipeline
     print("\n" + "="*60)
-    print("TRUSTFLOW: FULL VERIFICATION PIPELINE")
+    print("VELOS: FULL VERIFICATION PIPELINE")
     print("="*60)
     
     result = orchestrator.run_verification_pipeline(

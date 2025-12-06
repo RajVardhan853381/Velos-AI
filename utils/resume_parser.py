@@ -1,5 +1,5 @@
 """
-TrustFlow - Hybrid Resume Parser
+Velos - Hybrid Resume Parser
 Implements a smart parsing pipeline that automatically switches between
 text extraction and OCR based on content quality.
 

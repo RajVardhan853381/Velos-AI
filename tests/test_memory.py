@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TrustFlow - Memory Layer Test Script
+Velos - Memory Layer Test Script
 Tests the Vector Database (RAG) functionality.
 
 This verifies:
@@ -24,7 +24,7 @@ def test_memory_layer():
     """Test the vector store memory layer."""
     
     print("=" * 60)
-    print("🧪 TrustFlow Memory Layer Test")
+    print("🧪 Velos Memory Layer Test")
     print("=" * 60)
     
     # Initialize

@@ -2,7 +2,7 @@
 BatchProcessor: Handle ZIP files containing multiple resumes
 
 Processes a batch of resumes (PDF/DOCX) from a ZIP file,
-running each through the full TrustFlow verification pipeline.
+running each through the full Velos verification pipeline.
 
 For HR managers who need to process 20-50 resumes at once.
 """
@@ -45,7 +45,7 @@ class BatchProcessor:
         
         Args:
             resume_parser: ResumeParser instance for text extraction
-            orchestrator: TrustFlowOrchestrator instance for verification
+            orchestrator: VelosOrchestrator instance for verification
         """
         self.resume_parser = resume_parser
         self.orchestrator = orchestrator

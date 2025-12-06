@@ -1,5 +1,5 @@
 """
-God Mode Dashboard for TrustFlow
+God Mode Dashboard for Velos
 Oversight layer with real-time monitoring of all agents.
 """
 
@@ -434,7 +434,7 @@ def render_god_mode_tab(audit_db: Optional[AuditLog] = None):
 # Standalone page mode
 if __name__ == "__main__":
     st.set_page_config(
-        page_title="TrustFlow God Mode",
+        page_title="Velos God Mode",
         page_icon="👁️",
         layout="wide"
     )

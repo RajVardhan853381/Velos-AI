@@ -56,3 +56,9 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+
+chroma_db/
+velos_audit.db
+__pycache__/
+

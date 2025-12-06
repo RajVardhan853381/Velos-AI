@@ -1,5 +1,5 @@
 """
-TrustFlow - FastAPI Backend Server
+Velos - FastAPI Backend Server
 Connects the beautiful HTML frontend to the real AI agents.
 Built for ZYND AIckathon 2025
 """
@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="TrustFlow API",
+    title="Velos API",
     description="Decentralized Blind Hiring Platform - ZYND AIckathon 2025",
     version="1.0.0"
 )
@@ -72,10 +72,10 @@ ORCHESTRATOR_AVAILABLE = False
 orchestrator = None
 
 try:
-    from agents.orchestrator import TrustFlowOrchestrator
-    orchestrator = TrustFlowOrchestrator()
+    from agents.orchestrator import VelosOrchestrator
+    orchestrator = VelosOrchestrator()
     ORCHESTRATOR_AVAILABLE = True
-    print("✅ TrustFlow Orchestrator initialized")
+    print("✅ Velos Orchestrator initialized")
     print("✅ Zynd Protocol connected")
     
     # Initialize batch processing components with orchestrator
@@ -310,7 +310,7 @@ async def verify_candidate(request: VerifyRequest):
                 "time": datetime.now().strftime("%H:%M:%S"),
                 "user": pipeline_result.get("candidate_id", candidate_id),
                 "action": f"Pipeline completed: {final_status}",
-                "module": "TrustFlow Pipeline",
+                "module": "Velos Pipeline",
                 "status": "success" if is_passed else "warning"
             })
                 
@@ -1218,7 +1218,7 @@ async def get_candidate_dossier(candidate_id: str):
 @app.on_event("startup")
 async def startup_event():
     print("\n" + "="*50)
-    print("🚀 TrustFlow Server Starting...")
+    print("🚀 Velos Server Starting...")
     print("="*50)
     print(f"✅ FastAPI server initialized")
     print(f"{'✅' if ORCHESTRATOR_AVAILABLE else '⚠️'} Orchestrator: {'Connected' if ORCHESTRATOR_AVAILABLE else 'Simulation Mode'}")

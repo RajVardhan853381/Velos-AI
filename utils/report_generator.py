@@ -185,7 +185,7 @@ class ReportGenerator:
             
             report = f"""
 ╔══════════════════════════════════════════════════════════════════╗
-║                    TRUSTFLOW HIRING DOSSIER                       ║
+║                      VELOS HIRING DOSSIER                         ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║ Candidate ID: {candidate_id:<50} ║
 ║ Generated:    {datetime.now().strftime('%Y-%m-%d %H:%M:%S'):<50} ║
@@ -282,7 +282,7 @@ class ReportGenerator:
     def get_report_filename(self, report_type: str = "candidates") -> str:
         """Generate a filename for the report"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        return f"trustflow_{report_type}_{timestamp}.csv"
+        return f"velos_{report_type}_{timestamp}.csv"
 
 
 # Quick test
