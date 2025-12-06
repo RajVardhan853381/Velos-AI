@@ -5,9 +5,9 @@ services:
     region: oregon
     plan: free
     buildCommand: |
-      pip install -r requirements.txt
-      python -m spacy download en_core_web_sm
-    startCommand: cd /opt/render/project/src && uvicorn server:app --host 0.0.0.0 --port $PORT
+      pip install --no-cache-dir -r requirements.txt
+      python -m spacy download en_core_web_sm --no-cache-dir
+    startCommand: python server.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0

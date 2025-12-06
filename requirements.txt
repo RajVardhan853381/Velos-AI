@@ -1,14 +1,29 @@
-streamlit>=1.28.0
-langchain-groq>=0.1.0
-langchain>=0.1.0
-pypdf>=4.0.0
-python-dotenv>=1.0.0
-spacy>=3.7.0
-sentence-transformers>=2.2.0
-plotly>=5.18.0
-pandas>=2.0.0
-pydantic>=2.0.0
+# Core FastAPI Framework (Required)
 fastapi>=0.104.0
 uvicorn>=0.24.0
 python-multipart>=0.0.6
 aiofiles>=23.2.1
+pydantic>=2.0.0
+
+# AI & LLM (Required)
+langchain-groq>=0.1.0
+langchain>=0.1.0
+
+# NLP - Lightweight (Required)
+spacy>=3.7.0
+
+# Document Processing (Required)
+pypdf>=4.0.0
+python-docx>=1.0.0
+
+# Vector DB (Required) - includes sentence-transformers
+chromadb>=0.4.0
+
+# Utilities (Required)
+python-dotenv>=1.0.0
+
+# Removed for memory optimization:
+# - streamlit (not used in FastAPI version)
+# - plotly (frontend handles charts)
+# - pandas (not essential)
+# - sentence-transformers (included in chromadb)
