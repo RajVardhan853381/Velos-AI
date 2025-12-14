@@ -47,9 +47,9 @@ class SkillValidator:
         
         if api_key and ChatGroq:
             self.llm = ChatGroq(
-                temperature=0,
+                temperature=0.2,  # Slightly creative for natural responses
                 api_key=api_key,  # type: ignore[arg-type]
-                model="llama-3.1-70b-versatile"
+                model="llama-3.3-70b-versatile"  # Updated from decommissioned llama-3.1-70b
             )
         else:
             self.llm = None
@@ -159,7 +159,7 @@ Job Description:
         """
         
         if not required_skills:
-            return 100.0  # No requirements = automatic pass
+            return 75.0  # No specific requirements = good but not perfect match
         
         if not candidate_skills:
             return 0.0  # No skills = fail
@@ -178,8 +178,10 @@ Job Description:
                     np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1])
                 )
                 
-                # Convert to 0-100 scale (similarity is typically 0.5-1.0 for related texts)
-                score = max(0, min(100, (similarity - 0.3) * 143))  # Normalize
+                # Convert to 0-100 scale with more variation
+                # Similarity typically ranges 0.4-0.95 for tech skills
+                # Map: 0.4->60, 0.6->75, 0.8->90, 0.95->100
+                score = max(60, min(100, (similarity - 0.4) * 72 + 60))
                 return round(score, 1)
             except Exception as e:
                 print(f"⚠️ Semantic matching failed: {e}")
@@ -337,6 +339,8 @@ Job Description:
         # ============ STEP 2: Parse JD Requirements ============
         print("🎯 Agent 2: Parsing job requirements...")
         jd_requirements = self.extract_job_requirements(job_description)
+        print(f"   Required skills found: {jd_requirements.get('required_skills', [])}")
+        print(f"   Role level: {jd_requirements.get('role_level', 'unknown')}")
         audit_entry["jd_parsed"] = jd_requirements
         
         # ============ STEP 3: Evidence Loop - RAG Lookup ============

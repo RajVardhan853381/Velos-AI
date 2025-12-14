@@ -44,7 +44,7 @@ class BlindGatekeeper:
             self.llm = ChatGroq(
                 temperature=0,
                 api_key=api_key,  # type: ignore[arg-type]
-                model="llama-3.1-70b-versatile"
+                model="llama-3.3-70b-versatile"  # Updated from decommissioned llama-3.1-70b
             )
         else:
             print("⚠️ GROQ_API_KEY not found or ChatGroq unavailable. Using fallback mode.")

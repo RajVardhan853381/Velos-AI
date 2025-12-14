@@ -15,6 +15,11 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
+# Disable ChromaDB telemetry BEFORE importing anything
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY"] = "False"
+os.environ["POSTHOG_DISABLED"] = "True"
+
 from fastapi import FastAPI, HTTPException, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -246,11 +251,17 @@ async def verify_candidate(request: VerifyRequest):
     
     if ORCHESTRATOR_AVAILABLE and orchestrator:
         try:
+            print(f"\n🚀 Running REAL AI pipeline for {candidate_id}...")
+            print(f"   Resume length: {len(request.resume_text)} chars")
+            print(f"   JD length: {len(request.job_description)} chars")
+            
             # Run through the actual AI pipeline
             pipeline_result = orchestrator.run_verification_pipeline(
                 request.resume_text, 
                 request.job_description
             )
+            
+            print(f"   ✅ Pipeline completed: {pipeline_result.get('final_status')}")
             
             # Extract results from pipeline_stages structure
             agent1 = pipeline_result.get("pipeline_stages", {}).get("agent_1", {})
@@ -272,6 +283,7 @@ async def verify_candidate(request: VerifyRequest):
             result["status"] = "passed" if is_passed else "failed"
             result["trust_score"] = round(skill_match_score, 1) if skill_match_score else 85
             result["skill_match"] = round(skill_match_score, 1) if skill_match_score else 80
+            result["years_exp"] = pipeline_result.get("years_exp", 0)  # Add years to top level
             result["redacted_resume"] = agent1.get("clean_data", {}).get("redacted_text", "")
             result["questions"] = pipeline_result.get("verification_questions", [])
             result["credential"] = pipeline_result.get("credentials_issued", [{}])[0] if pipeline_result.get("credentials_issued") else {}
@@ -315,9 +327,16 @@ async def verify_candidate(request: VerifyRequest):
             })
                 
         except Exception as e:
-            print(f"Pipeline error: {e}")
+            import traceback
+            print(f"\n❌ Pipeline error: {e}")
+            print(f"   Full traceback:")
+            traceback.print_exc()
+            print(f"   Falling back to simulation mode...\n")
+            
             result["status"] = "failed"
             result["error"] = str(e)
+            result["simulation_mode"] = True
+            result["error_details"] = traceback.format_exc()
             
             state.add_audit_log({
                 "time": datetime.now().strftime("%H:%M:%S"),
@@ -327,9 +346,13 @@ async def verify_candidate(request: VerifyRequest):
                 "status": "failed"
             })
     else:
-        # Simulation mode
+        # Simulation mode (orchestrator not available)
         import random
+        print(f"\n⚠️ Running in SIMULATION MODE (Orchestrator not available)")
+        print(f"   ORCHESTRATOR_AVAILABLE: {ORCHESTRATOR_AVAILABLE}")
+        print(f"   orchestrator object: {orchestrator is not None}\n")
         
+        result["simulation_mode"] = True
         result["status"] = random.choice(["passed", "passed", "passed", "failed"])
         result["trust_score"] = random.randint(75, 98) if result["status"] == "passed" else random.randint(40, 60)
         result["skill_match"] = random.randint(70, 95) if result["status"] == "passed" else random.randint(45, 65)

@@ -82,6 +82,10 @@ class ResumeVectorStore:
         self.persist_directory = persist_directory
         os.makedirs(persist_directory, exist_ok=True)
         
+        # Disable ChromaDB telemetry completely (prevents hang on init)
+        os.environ["ANONYMIZED_TELEMETRY"] = "False"
+        os.environ["CHROMA_TELEMETRY"] = "False"
+        
         # Initialize ChromaDB client with persistence
         print(f"📦 Initializing ChromaDB at: {persist_directory}")
         self.client = chromadb.PersistentClient(

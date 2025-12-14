@@ -37,9 +37,9 @@ class Inquisitor:
         
         if api_key and ChatGroq:
             self.llm = ChatGroq(
-                temperature=0.3,  # Slightly creative for varied questions
+                temperature=0.7,  # More creative for varied, unique questions
                 api_key=api_key,  # type: ignore[arg-type]
-                model="llama-3.1-70b-versatile"
+                model="llama-3.3-70b-versatile"  # Updated from decommissioned llama-3.1-70b
             )
         else:
             self.llm = None
