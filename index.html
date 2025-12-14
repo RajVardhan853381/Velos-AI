@@ -1282,8 +1282,8 @@
                     <div class="hero-content">
                         <div class="hero-icon">🎯</div>
                         <div class="hero-text">
-                            <h2>Candidate Score: 92%</h2>
-                            <p>Comprehensive evaluation results based on skill assessment</p>
+                            <h2 id="resultsDashboardScore">Candidate Score: --</h2>
+                            <p id="resultsDashboardStatus">Run a verification to see results</p>
                         </div>
                     </div>
                 </div>
@@ -1315,25 +1315,25 @@
                                 <th>Accuracy</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="resultsAgentTableBody">
                             <tr>
                                 <td>🛡️ Blind Gatekeeper (A1)</td>
-                                <td>24</td>
-                                <td>91.7%</td>
+                                <td id="resultsAgent1Decisions">0</td>
+                                <td id="resultsAgent1PassRate">0%</td>
                                 <td>1.2s</td>
                                 <td>100%</td>
                             </tr>
                             <tr>
                                 <td>✓ Skill Validator (A2)</td>
-                                <td>22</td>
-                                <td>81.8%</td>
+                                <td id="resultsAgent2Decisions">0</td>
+                                <td id="resultsAgent2PassRate">0%</td>
                                 <td>2.1s</td>
                                 <td>98%</td>
                             </tr>
                             <tr>
                                 <td>❓ Inquisitor (A3)</td>
-                                <td>18</td>
-                                <td>88.9%</td>
+                                <td id="resultsAgent3Decisions">0</td>
+                                <td id="resultsAgent3PassRate">0%</td>
                                 <td>3.5s</td>
                                 <td>95%</td>
                             </tr>
@@ -2188,6 +2188,13 @@ Responsibilities:
             resultsDiv.style.display = 'block';
             resultsDiv.style.borderColor = result.status === 'passed' ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 68, 68, 0.3)';
             
+            // Update Results Dashboard tab
+            const score = result.trust_score || result.skill_match || 0;
+            document.getElementById('resultsDashboardScore').textContent = `Candidate Score: ${score}%`;
+            document.getElementById('resultsDashboardStatus').textContent = result.status === 'passed' 
+                ? `✅ ${result.id} passed verification` 
+                : `❌ ${result.id} failed verification`;
+            
             contentDiv.innerHTML = `
                 <div style="background: rgba(0, 212, 170, 0.1); padding: 16px; border-radius: 10px; text-align: center;">
                     <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">CANDIDATE ID</div>
@@ -2236,6 +2243,18 @@ Responsibilities:
                 document.getElementById('statAgent2').textContent = stats.passed_agent2;
                 document.getElementById('statApproved').textContent = stats.approved_total;
                 document.getElementById('statFraud').textContent = stats.fraud_detected;
+                
+                // Update Results Dashboard agent performance table
+                if (stats.agent_stats) {
+                    document.getElementById('resultsAgent1Decisions').textContent = stats.agent_stats.gatekeeper?.processed || 0;
+                    document.getElementById('resultsAgent1PassRate').textContent = (stats.agent_stats.gatekeeper?.pass_rate || 0) + '%';
+                    
+                    document.getElementById('resultsAgent2Decisions').textContent = stats.agent_stats.validator?.processed || 0;
+                    document.getElementById('resultsAgent2PassRate').textContent = (stats.agent_stats.validator?.pass_rate || 0) + '%';
+                    
+                    document.getElementById('resultsAgent3Decisions').textContent = stats.agent_stats.inquisitor?.processed || 0;
+                    document.getElementById('resultsAgent3PassRate').textContent = (stats.agent_stats.inquisitor?.pass_rate || 0) + '%';
+                }
 
             } catch (error) {
                 console.error('Error refreshing stats:', error);
