@@ -99,13 +99,13 @@ class AppState:
         self.candidates: List[Dict] = []
         self.audit_logs: List[Dict] = []
         self.agent_stats = {
-            "gatekeeper": {"processed": 24, "pass_rate": 91.7, "avg_time": 1.2, "accuracy": 100},
-            "validator": {"processed": 22, "pass_rate": 81.8, "avg_time": 2.1, "accuracy": 98},
-            "inquisitor": {"processed": 18, "pass_rate": 88.9, "avg_time": 3.5, "accuracy": 95}
+            "gatekeeper": {"processed": 0, "passed": 0, "pass_rate": 0, "avg_time": 1.2, "accuracy": 100},
+            "validator": {"processed": 0, "passed": 0, "pass_rate": 0, "avg_time": 2.1, "accuracy": 98},
+            "inquisitor": {"processed": 0, "passed": 0, "pass_rate": 0, "avg_time": 3.5, "accuracy": 95}
         }
-        self.total_candidates = 1
-        self.approved = 1
-        self.fraud_detected = 2
+        self.total_candidates = 0
+        self.approved = 0
+        self.fraud_detected = 0
         
     def add_candidate(self, candidate: Dict):
         self.candidates.insert(0, candidate)
@@ -115,6 +115,17 @@ class AppState:
         self.audit_logs.insert(0, log)
         if len(self.audit_logs) > 100:
             self.audit_logs.pop()
+            
+    def update_agent_stats(self, agent_name: str, passed: bool):
+        """Update agent statistics with actual pass/fail data"""
+        if agent_name in self.agent_stats:
+            self.agent_stats[agent_name]["processed"] += 1
+            if passed:
+                self.agent_stats[agent_name]["passed"] = self.agent_stats[agent_name].get("passed", 0) + 1
+            # Calculate pass rate
+            processed = self.agent_stats[agent_name]["processed"]
+            passed_count = self.agent_stats[agent_name].get("passed", 0)
+            self.agent_stats[agent_name]["pass_rate"] = round((passed_count / processed * 100), 1) if processed > 0 else 0
 
 state = AppState()
 
@@ -159,8 +170,8 @@ async def get_stats():
     """Get dashboard statistics"""
     return {
         "total_candidates": state.total_candidates,
-        "passed_agent1": state.agent_stats["gatekeeper"]["processed"],
-        "passed_agent2": state.agent_stats["validator"]["processed"],
+        "passed_agent1": state.agent_stats["gatekeeper"].get("passed", 0),
+        "passed_agent2": state.agent_stats["validator"].get("passed", 0),
         "approved_total": state.approved,
         "fraud_detected": state.fraud_detected,
         "agent_stats": state.agent_stats
@@ -307,12 +318,12 @@ async def verify_candidate(request: VerifyRequest):
                 }
             }
             
-            # Update agent stats
-            state.agent_stats["gatekeeper"]["processed"] += 1
+            # Update agent stats with actual results
+            state.update_agent_stats("gatekeeper", agent1_status == "PASS")
             if agent2:
-                state.agent_stats["validator"]["processed"] += 1
+                state.update_agent_stats("validator", agent2_status == "PASS")
             if agent3:
-                state.agent_stats["inquisitor"]["processed"] += 1
+                state.update_agent_stats("inquisitor", True)  # If agent3 ran, questions were generated
             
             if result["status"] == "passed":
                 state.approved += 1
@@ -369,9 +380,9 @@ async def verify_candidate(request: VerifyRequest):
             "inquisitor": {"status": result["status"], "trust_score": result["trust_score"]}
         }
         
-        state.agent_stats["gatekeeper"]["processed"] += 1
-        state.agent_stats["validator"]["processed"] += 1  
-        state.agent_stats["inquisitor"]["processed"] += 1
+        state.update_agent_stats("gatekeeper", True)
+        state.update_agent_stats("validator", True)
+        state.update_agent_stats("inquisitor", result["status"] == "passed")
         
         if result["status"] == "passed":
             state.approved += 1
@@ -379,24 +390,34 @@ async def verify_candidate(request: VerifyRequest):
     # Add candidate to list
     state.add_candidate(result)
     
-    # Add completion audit log
-    state.add_audit_log({
-        "time": datetime.now().strftime("%H:%M:%S"),
-        "user": "Pipeline",
-        "action": f"Completed verification for {candidate_id}",
-        "module": "Verification",
-        "status": result["status"]
-    })
-    
-    # Add individual agent logs
+    # Add individual agent logs FIRST (so they appear in chronological order)
     for agent_name, agent_result in result.get("stages", {}).items():
+        agent_status = agent_result.get("status", "unknown")
+        # Map status to correct format for audit log
+        if agent_status == "passed":
+            log_status = "success"
+        elif agent_status == "failed":
+            log_status = "failed"
+        else:
+            log_status = "pending"
+            
         state.add_audit_log({
             "time": datetime.now().strftime("%H:%M:%S"),
             "user": agent_name.title(),
             "action": f"Processed {candidate_id}",
             "module": f"Agent {agent_name}",
-            "status": agent_result.get("status", "passed")
+            "status": log_status
         })
+    
+    # Add completion audit log LAST
+    completion_status = "success" if result["status"] == "passed" else "failed"
+    state.add_audit_log({
+        "time": datetime.now().strftime("%H:%M:%S"),
+        "user": "Pipeline",
+        "action": f"Completed verification for {candidate_id}",
+        "module": "Verification",
+        "status": completion_status
+    })
     
     return result
 

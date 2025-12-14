@@ -48,9 +48,14 @@ from agents.agent_3_inquisitor import Inquisitor
 from database.storage import AuditLog
 
 # Vector Store for RAG
+SKIP_VECTOR = os.getenv("SKIP_VECTOR_STORE") == "1"
 try:
-    from database.vector_store import ResumeVectorStore
-    VECTOR_STORE_AVAILABLE = True
+    if not SKIP_VECTOR:
+        from database.vector_store import ResumeVectorStore
+        VECTOR_STORE_AVAILABLE = True
+    else:
+        VECTOR_STORE_AVAILABLE = False
+        print("⚠️ Vector store skipped for quick start")
 except ImportError:
     VECTOR_STORE_AVAILABLE = False
     print("⚠️ Vector store not available, context retrieval disabled")
@@ -137,8 +142,9 @@ class VelosOrchestrator:
         self.vector_store: Optional[Any] = None
         if VECTOR_STORE_AVAILABLE:
             try:
-                self.vector_store = ResumeVectorStore()
-                print("✅ Vector store initialized (RAG enabled)")
+                print("⚠️ Vector store disabled for quick preview")
+                # self.vector_store = ResumeVectorStore()
+                # print("✅ Vector store initialized (RAG enabled)")
             except Exception as e:
                 print(f"⚠️ Vector store init failed: {e}")
                 self.vector_store = None
