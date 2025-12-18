@@ -4,6 +4,7 @@ uvicorn>=0.24.0
 python-multipart>=0.0.6
 aiofiles>=23.2.1
 pydantic>=2.0.0
+slowapi>=0.1.9
 
 # AI & LLM (Required)
 langchain-groq>=0.1.0
@@ -21,6 +22,9 @@ chromadb>=0.4.0
 
 # Utilities (Required)
 python-dotenv>=1.0.0
+
+# Zynd Protocol SDK (Required)
+zyndai-agent>=0.1.0
 
 # Removed for memory optimization:
 # - streamlit (not used in FastAPI version)

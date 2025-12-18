@@ -55,17 +55,17 @@ class SkillValidator:
             self.llm = None
         
         # Initialize embeddings model for semantic matching
-        if EMBEDDINGS_AVAILABLE and SentenceTransformer is not None and not os.getenv("SKIP_VECTOR_STORE"):
+        if EMBEDDINGS_AVAILABLE and SentenceTransformer is not None:
             try:
-                self.embeddings_model = SentenceTransformer('all-MiniLM-L6-v2')
+                # Try to load from cache, don't download if not available
+                self.embeddings_model = SentenceTransformer('all-MiniLM-L6-v2', cache_folder="/tmp/sentence_transformers")
                 print("✅ Semantic matching enabled")
             except Exception as e:
-                print(f"⚠️ Could not load embeddings model: {e}")
+                print(f"⚠️ Could not load embeddings model (may need download), continuing without semantic matching: {e}")
                 self.embeddings_model = None
         else:
             self.embeddings_model = None
-            if os.getenv("SKIP_VECTOR_STORE"):
-                print("⚠️ Semantic matching disabled for quick start")
+            print("⚠️ Semantic matching not available")
         
         self.audit_log = []
         self.pass_threshold = 60  # Minimum score to pass

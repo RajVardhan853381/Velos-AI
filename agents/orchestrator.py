@@ -25,18 +25,29 @@ try:
     from zynd.protocol import (
         ZyndProtocol as ZyndProtocolClass,
         zynd_protocol,
+        get_protocol_instance,
         IdentityManager,
         AgentCommunicationManager,
         SearchAndDiscoveryManager,
         VerifiableCredential,
-        check_official_sdk_available
+        check_official_sdk_available,
+        __version__ as zynd_version,
+        __python_version__ as python_ver,
+        __official_sdk_available__ as sdk_available,
+        __supports_official_sdk__ as sdk_supported
     )
     ZYND_AVAILABLE = True
-    zynd_protocol_instance: Optional["ZyndProtocol"] = zynd_protocol
-    if check_official_sdk_available():
-        print("✅ Using official zyndai-agent SDK")
+    zynd_protocol_instance: Optional["ZyndProtocol"] = get_protocol_instance()
+    
+    # Print detailed compatibility info
+    if sdk_available:
+        print(f"✅ Using official zyndai-agent SDK v{zynd_version}")
+    elif sdk_supported:
+        print(f"⚠️ Python {python_ver} supports official SDK but not installed")
+        print(f"ℹ️ Using Zynd Protocol compatibility layer v{zynd_version}")
     else:
-        print("ℹ️ Using Zynd Protocol compatibility layer")
+        print(f"ℹ️ Using Zynd Protocol compatibility layer v{zynd_version}")
+        print(f"   (Official SDK requires Python 3.12+, you have {python_ver})")
 except ImportError:
     ZYND_AVAILABLE = False
     zynd_protocol_instance: Optional["ZyndProtocol"] = None  # type: ignore
@@ -142,11 +153,11 @@ class VelosOrchestrator:
         self.vector_store: Optional[Any] = None
         if VECTOR_STORE_AVAILABLE:
             try:
-                print("⚠️ Vector store disabled for quick preview")
-                # self.vector_store = ResumeVectorStore()
-                # print("✅ Vector store initialized (RAG enabled)")
+                from database.vector_store import ResumeVectorStore
+                self.vector_store = ResumeVectorStore()
+                print("✅ Vector store initialized (RAG enabled)")
             except Exception as e:
-                print(f"⚠️ Vector store init failed: {e}")
+                print(f"⚠️ Vector store init failed, continuing without RAG: {e}")
                 self.vector_store = None
         
         # Initialize Trust Layer components

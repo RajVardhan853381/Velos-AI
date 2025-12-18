@@ -15,19 +15,29 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
-# Disable ChromaDB telemetry BEFORE importing anything
+# Disable ChromaDB and LangSmith telemetry BEFORE importing anything
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 os.environ["CHROMA_TELEMETRY"] = "False"
 os.environ["POSTHOG_DISABLED"] = "True"
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGCHAIN_ENDPOINT"] = ""
+os.environ["LANGCHAIN_API_KEY"] = ""
+os.environ["HF_HUB_OFFLINE"] = "1"  # Prevent HuggingFace downloads
 
 from fastapi import FastAPI, HTTPException, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Add current directory for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -36,10 +46,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# Add rate limiter state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS middleware - SECURITY: Only allow specific origins
+ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",  # React frontend (Vite dev server)
+    "http://127.0.0.1:5173",
+    "https://velos-ai.onrender.com",  # Add your production domain here
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS if os.getenv("ENVIRONMENT") == "production" else ["*"],  # Allow all in dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -131,8 +153,16 @@ state = AppState()
 
 # Pydantic models
 class VerifyRequest(BaseModel):
-    resume_text: str
-    job_description: str
+    resume_text: str = Field(..., min_length=50, max_length=50000, description="Resume text (50-50k chars)")
+    job_description: str = Field(..., min_length=20, max_length=10000, description="Job description (20-10k chars)")
+    
+    @validator('resume_text', 'job_description')
+    def strip_and_validate(cls, v):
+        # Strip whitespace
+        v = v.strip()
+        # Basic sanitization - remove control characters
+        v = ''.join(char for char in v if ord(char) >= 32 or char in '\n\r\t')
+        return v
 
 class CandidateResponse(BaseModel):
     id: str
@@ -154,16 +184,62 @@ async def serve_frontend():
         return HTMLResponse(content=html_path.read_text(), status_code=200)
     return HTMLResponse(content="<h1>index.html not found</h1>", status_code=404)
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "components": {
+            "api": "up",
+            "orchestrator": "up" if ORCHESTRATOR_AVAILABLE and orchestrator else "down",
+            "groq_api": "up" if ORCHESTRATOR_AVAILABLE else "unknown",
+            "database": "up" if orchestrator and hasattr(orchestrator, 'audit_db') else "unknown",
+            "zynd_protocol": "up" if ORCHESTRATOR_AVAILABLE else "down",
+        }
+    }
+    
+    # Determine overall health
+    critical_components = ["api", "orchestrator"]
+    all_critical_up = all(health_status["components"][c] == "up" for c in critical_components)
+    
+    if not all_critical_up:
+        health_status["status"] = "degraded"
+        return JSONResponse(status_code=503, content=health_status)
+    
+    return health_status
+
 @app.get("/api/status")
 async def get_status():
-    """Get system status"""
-    return {
+    """Get system status with Zynd Protocol details"""
+    status_response = {
         "status": "online",
         "orchestrator": ORCHESTRATOR_AVAILABLE,
         "zynd_connected": ORCHESTRATOR_AVAILABLE,
         "groq_connected": ORCHESTRATOR_AVAILABLE,
         "timestamp": datetime.now().isoformat()
     }
+    
+    # Add Zynd Protocol version info if available
+    if ORCHESTRATOR_AVAILABLE:
+        try:
+            from zynd.protocol import (
+                __version__ as zynd_version,
+                __python_version__ as python_ver,
+                __official_sdk_available__ as sdk_available,
+                __supports_official_sdk__ as sdk_supported
+            )
+            status_response["zynd_protocol"] = {
+                "version": zynd_version,
+                "python_version": python_ver,
+                "using_official_sdk": sdk_available,
+                "supports_official_sdk": sdk_supported,
+                "mode": "official" if sdk_available else "compatibility"
+            }
+        except:
+            pass
+    
+    return status_response
 
 @app.get("/api/stats")
 async def get_stats():
@@ -232,7 +308,8 @@ async def get_candidates():
     return {"candidates": state.candidates}
 
 @app.post("/api/verify")
-async def verify_candidate(request: VerifyRequest):
+@limiter.limit("5/minute")  # Rate limit: 5 verification requests per minute
+async def verify_candidate(request: Request, verify_req: VerifyRequest):
     """
     Main verification endpoint - processes candidate through all 3 agents
     """
@@ -263,13 +340,13 @@ async def verify_candidate(request: VerifyRequest):
     if ORCHESTRATOR_AVAILABLE and orchestrator:
         try:
             print(f"\n🚀 Running REAL AI pipeline for {candidate_id}...")
-            print(f"   Resume length: {len(request.resume_text)} chars")
-            print(f"   JD length: {len(request.job_description)} chars")
+            print(f"   Resume length: {len(verify_req.resume_text)} chars")
+            print(f"   JD length: {len(verify_req.job_description)} chars")
             
             # Run through the actual AI pipeline
             pipeline_result = orchestrator.run_verification_pipeline(
-                request.resume_text, 
-                request.job_description
+                verify_req.resume_text, 
+                verify_req.job_description
             )
             
             print(f"   ✅ Pipeline completed: {pipeline_result.get('final_status')}")
@@ -339,23 +416,31 @@ async def verify_candidate(request: VerifyRequest):
                 
         except Exception as e:
             import traceback
-            print(f"\n❌ Pipeline error: {e}")
+            error_msg = f"Pipeline error: {str(e)}"
+            print(f"\n❌ {error_msg}")
             print(f"   Full traceback:")
             traceback.print_exc()
-            print(f"   Falling back to simulation mode...\n")
             
+            # Return detailed error response instead of falling back
             result["status"] = "failed"
-            result["error"] = str(e)
-            result["simulation_mode"] = True
-            result["error_details"] = traceback.format_exc()
+            result["error"] = error_msg
+            result["error_type"] = type(e).__name__
+            result["stages"] = {
+                "gatekeeper": {"status": "failed", "error": error_msg},
+                "validator": {"status": "pending"},
+                "inquisitor": {"status": "pending"}
+            }
             
             state.add_audit_log({
                 "time": datetime.now().strftime("%H:%M:%S"),
                 "user": "System",
-                "action": f"Pipeline error: {str(e)[:50]}",
+                "action": f"Pipeline error: {str(e)[:100]}",
                 "module": "Pipeline",
                 "status": "failed"
             })
+            
+            # Don't continue processing if pipeline failed
+            return result
     else:
         # Simulation mode (orchestrator not available)
         import random
@@ -367,7 +452,7 @@ async def verify_candidate(request: VerifyRequest):
         result["status"] = random.choice(["passed", "passed", "passed", "failed"])
         result["trust_score"] = random.randint(75, 98) if result["status"] == "passed" else random.randint(40, 60)
         result["skill_match"] = random.randint(70, 95) if result["status"] == "passed" else random.randint(45, 65)
-        result["redacted_resume"] = "[REDACTED NAME]\n[REDACTED EMAIL]\n[REDACTED PHONE]\n\n" + request.resume_text[:500] + "..."
+        result["redacted_resume"] = "[REDACTED NAME]\n[REDACTED EMAIL]\n[REDACTED PHONE]\n\n" + verify_req.resume_text[:500] + "..."
         result["questions"] = [
             "Can you explain your experience with the main technology stack mentioned?",
             "Describe a challenging project you led and its outcomes.",
@@ -1266,7 +1351,18 @@ async def startup_event():
     print("="*50)
     print(f"✅ FastAPI server initialized")
     print(f"{'✅' if ORCHESTRATOR_AVAILABLE else '⚠️'} Orchestrator: {'Connected' if ORCHESTRATOR_AVAILABLE else 'Simulation Mode'}")
-    print(f"{'✅' if ORCHESTRATOR_AVAILABLE else '⚠️'} Zynd Protocol: {'Connected' if ORCHESTRATOR_AVAILABLE else 'Not Available'}")
+    
+    # Show Zynd Protocol detailed status
+    if ORCHESTRATOR_AVAILABLE and orchestrator:
+        try:
+            from zynd.protocol import __version__, __python_version__, __official_sdk_available__, __supports_official_sdk__
+            zynd_status = "✅ Official SDK" if __official_sdk_available__ else ("⚠️ Compatibility Layer" if __supports_official_sdk__ else "ℹ️ Compatibility Layer")
+            print(f"{zynd_status} Zynd Protocol v{__version__} (Python {__python_version__})")
+        except:
+            print(f"✅ Zynd Protocol: Connected")
+    else:
+        print(f"⚠️ Zynd Protocol: Not Available")
+    
     print(f"{'✅' if ORCHESTRATOR_AVAILABLE else '⚠️'} GROQ API: {'Connected' if ORCHESTRATOR_AVAILABLE else 'Not Available'}")
     print(f"{'✅' if PARSER_AVAILABLE else '⚠️'} Resume Parser: {'Ready (PDF/DOCX/OCR)' if PARSER_AVAILABLE else 'Not Available'}")
     print(f"{'✅' if BATCH_AVAILABLE else '⚠️'} Batch Processing: {'Ready' if BATCH_AVAILABLE else 'Not Available'}")

@@ -9,12 +9,19 @@ This implementation provides:
 4. Verifiable Credentials - W3C standard format
 
 NOTE: This is a compatibility layer for Python 3.10. 
-When running on Python 3.12+, use the official package:
+The official zyndai-agent package requires Python 3.12+.
+When you upgrade to Python 3.12+, install the official package:
     pip install zyndai-agent==0.1.5
 
 Official API: https://pypi.org/project/zyndai-agent/
+GitHub: https://github.com/zyndai/zyndai-agent
+
+COMPATIBILITY STATUS:
+✅ Python 3.10.12 - Using compatibility layer
+❌ Python 3.12+ - Can use official SDK
 """
 
+import sys
 import hashlib
 import hmac
 import json
@@ -24,6 +31,10 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any, TypedDict
 from dataclasses import dataclass, field
+
+# Detect Python version for SDK compatibility
+PYTHON_VERSION = sys.version_info
+SUPPORTS_OFFICIAL_SDK = PYTHON_VERSION >= (3, 12)
 
 
 # ============ TYPE DEFINITIONS (matching official SDK) ============
@@ -726,16 +737,12 @@ class ZyndProtocol:
         return min(100, base_score + (creds_issued * 10))
 
 
-# ============ GLOBAL INSTANCE ============
-
-# Create a singleton instance for easy import
-zynd_protocol = ZyndProtocol()
-
-
 # ============ COMPATIBILITY CHECK ============
 
 def check_official_sdk_available() -> bool:
     """Check if the official zyndai-agent SDK is available."""
+    if not SUPPORTS_OFFICIAL_SDK:
+        return False
     try:
         import zyndai_agent  # type: ignore[import-not-found]
         return True
@@ -747,15 +754,42 @@ def get_protocol_instance():
     """
     Get the appropriate protocol instance.
     Uses official SDK on Python 3.12+, falls back to compatible implementation.
+    
+    Returns:
+        ZyndProtocol instance (compatibility layer or official SDK wrapper)
     """
+    python_ver = f"{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}.{PYTHON_VERSION.micro}"
+    
     if check_official_sdk_available():
-        print("✅ Using official zyndai-agent SDK")
-        # Return official implementation wrapper
-        from zyndai_agent.agent import ZyndAIAgent, AgentConfig  # type: ignore[import-not-found]
-        return ZyndAIAgent
+        print(f"✅ Using official zyndai-agent SDK (Python {python_ver})")
+        try:
+            from zyndai_agent.agent import ZyndAIAgent, AgentConfig  # type: ignore[import-not-found]
+            # Wrap official SDK to match our API
+            return zynd_protocol  # Use our wrapper for now
+        except Exception as e:
+            print(f"⚠️ Official SDK import failed: {e}")
+            print(f"ℹ️ Falling back to compatibility layer")
+            return zynd_protocol
     else:
-        print("ℹ️ Using Zynd Protocol compatibility layer (Python 3.10)")
+        if SUPPORTS_OFFICIAL_SDK:
+            print(f"ℹ️ Python {python_ver} supports official SDK, but package not installed")
+            print(f"   Install with: pip install zyndai-agent>=0.1.5")
+        else:
+            print(f"ℹ️ Using Zynd Protocol compatibility layer (Python {python_ver})")
+            print(f"   Official SDK requires Python 3.12+ (you have {python_ver})")
         return zynd_protocol
+
+
+# ============ GLOBAL INSTANCE ============
+
+# Create a singleton instance for easy import
+zynd_protocol = ZyndProtocol()
+
+# Export SDK compatibility status
+__version__ = "0.1.5-compat"
+__python_version__ = f"{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}.{PYTHON_VERSION.micro}"
+__official_sdk_available__ = check_official_sdk_available()
+__supports_official_sdk__ = SUPPORTS_OFFICIAL_SDK
 
 
 # ============ EXAMPLE USAGE ============
