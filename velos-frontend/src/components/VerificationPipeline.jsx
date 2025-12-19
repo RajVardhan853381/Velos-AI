@@ -15,21 +15,87 @@ const VerificationPipeline = () => {
 
   // Load sample data
   const loadSampleData = async () => {
-    try {
-      const [resumeRes, jobRes] = await Promise.all([
-        fetch('http://localhost:8000/api/sample-resume'),
-        fetch('http://localhost:8000/api/sample-job-description')
-      ]);
-      
-      if (resumeRes.ok && jobRes.ok) {
-        const resumeData = await resumeRes.json();
-        const jobData = await jobRes.json();
-        setResumeText(resumeData.resume || '');
-        setJobDescription(jobData.job_description || '');
-      }
-    } catch (error) {
-      console.error('Failed to load sample data:', error);
-    }
+    const sampleResume = `Name: Aarvex Nolin
+Target Role: Applied AI Engineer / GenAI Engineer (Entry Level)
+Email: aarvex.nolin@samplemail.com
+
+GitHub: github.com/aarvex-ai
+LinkedIn: linkedin.com/in/aarvexnolin
+
+EDUCATION
+Bachelor of Technology in Computer Science
+University Name, 2020-2024
+CGPA: 8.5/10
+
+SKILLS
+Programming Languages: Python, JavaScript, Java
+AI/ML Frameworks: TensorFlow, PyTorch, Hugging Face Transformers
+GenAI Tools: LangChain, OpenAI API, Llama, GPT-4
+Cloud: AWS, Google Cloud Platform
+Databases: PostgreSQL, MongoDB, Vector DBs
+Version Control: Git, GitHub
+
+EXPERIENCE
+AI Research Intern | Tech Startup | Jan 2024 - Jun 2024
+- Developed fine-tuned LLMs for domain-specific applications
+- Built RAG (Retrieval Augmented Generation) pipelines
+- Implemented prompt engineering strategies
+- Created chatbot applications using LangChain
+
+PROJECTS
+1. Resume Verification System
+   - Built AI-powered resume verification tool
+   - Implemented multi-agent system for fraud detection
+   - Technologies: Python, FastAPI, LangChain, ChromaDB
+
+2. Sentiment Analysis Dashboard
+   - Created real-time sentiment analysis for customer reviews
+   - Technologies: React, Python, TensorFlow
+
+CERTIFICATIONS
+- Deep Learning Specialization - Coursera
+- AWS Certified Cloud Practitioner`;
+
+    const sampleJob = `Position: Junior Applied AI Engineer
+
+Type: Full-Time / Contract
+Mode: Remote / Hybrid
+Experience: 0-1 year (Project experience accepted)
+
+ABOUT THE ROLE:
+We are seeking a passionate Junior Applied AI Engineer to join our growing AI team. You'll work on cutting-edge GenAI applications and LLM-powered solutions.
+
+REQUIRED SKILLS:
+- Strong Python programming
+- Experience with LLMs (OpenAI, Llama, etc.)
+- Knowledge of RAG pipelines and vector databases
+- Understanding of prompt engineering
+- Familiarity with LangChain or similar frameworks
+- Basic ML/DL knowledge
+- Git/GitHub proficiency
+
+PREFERRED SKILLS:
+- Experience with FastAPI or Flask
+- Cloud platform knowledge (AWS/GCP)
+- Frontend skills (React/Vue)
+- Experience with fine-tuning models
+
+RESPONSIBILITIES:
+- Develop and deploy AI-powered applications
+- Build RAG pipelines and chatbot systems
+- Optimize LLM prompts and responses
+- Collaborate with cross-functional teams
+- Document technical solutions
+
+WHAT WE OFFER:
+- Competitive salary
+- Remote work flexibility
+- Learning & development opportunities
+- Mentorship from senior engineers
+- Cutting-edge AI projects`;
+
+    setResumeText(sampleResume);
+    setJobDescription(sampleJob);
   };
 
   // Handle file upload
