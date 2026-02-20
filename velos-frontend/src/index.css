@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 3D perspective for transforms */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-gpu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Convert all dark gradient backgrounds to light glass */
+.from-indigo-900\/80,
+.from-indigo-900\/50,
+.from-purple-900\/80,
+.from-purple-900\/50,
+.from-red-900\/50,
+.from-blue-900\/50,
+.from-pink-900\/50,
+.from-green-900\/50 {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.35)) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Adjust text colors for light backgrounds */
+.from-indigo-900\/80 .text-white,
+.from-indigo-900\/50 .text-white,
+.from-purple-900\/80 .text-white,
+.from-purple-900\/50 .text-white,
+.from-red-900\/50 .text-white,
+.from-blue-900\/50 .text-white,
+.from-pink-900\/50 .text-white {
+  color: rgb(31, 41, 55) !important;
+}
+
+/* Convert light text colors to dark for readability */
+[class*="from-indigo-900"] .text-indigo-300,
+[class*="from-purple-900"] .text-purple-300,
+[class*="from-purple-900"] .text-indigo-300,
+[class*="from-red-900"] .text-red-300,
+[class*="from-blue-900"] .text-blue-300,
+[class*="from-pink-900"] .text-pink-300 {
+  color: rgb(75, 85, 99) !important;
+}
+
+/* Convert bg-black/20 to light glass */
+[class*="from-indigo-900"] .bg-black\/20,
+[class*="from-purple-900"] .bg-black\/20,
+[class*="from-red-900"] .bg-black\/20,
+[class*="from-blue-900"] .bg-black\/20,
+[class*="from-pink-900"] .bg-black\/20 {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Scrollbar styling for main content */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 241, 241, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(193, 193, 193, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 161, 161, 0.7);
+}

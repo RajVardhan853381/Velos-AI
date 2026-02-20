@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: velos-ai
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: |
+      pip install --no-cache-dir -r requirements.txt
+      python -m spacy download en_core_web_sm --no-cache-dir
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: GROQ_API_KEY
+        sync: false

@@ -1,0 +1,47 @@
+# Core FastAPI Framework (Required)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+pydantic>=2.0.0
+slowapi>=0.1.9
+
+# AI & LLM (Required)
+langchain-groq>=0.1.0
+langchain>=0.1.0
+
+# NLP - Lightweight (Required)
+spacy>=3.7.0
+
+# Document Processing (Required)
+pypdf>=4.0.0
+python-docx>=1.0.0
+
+# Vector DB (Required) - includes sentence-transformers
+chromadb>=0.4.0
+
+# Utilities (Required)
+python-dotenv>=1.0.0
+psutil>=5.9.0
+
+# Testing (Development)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0
+
+# Zynd Protocol SDK & Blockchain (Required)
+zyndai-agent>=0.1.0
+eth-account>=0.11.0
+web3>=6.15.0
+pyzmq>=25.1.0
+qrcode[pil]>=7.4.0
+jsonschema>=4.20.0
+
+# Removed for memory optimization:
+# - streamlit (not used in FastAPI version)
+# - plotly (frontend handles charts)
+# - pandas (not essential)
+# - sentence-transformers (included in chromadb)
+
+# Anti-cheat proctoring (Feature 4)
+opencv-python>=4.8.0

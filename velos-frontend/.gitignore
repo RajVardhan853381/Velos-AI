@@ -1,0 +1,4 @@
+# Allow .env to be committed for this sub-package (no secrets inside)
+!.env
+dist/
+node_modules/

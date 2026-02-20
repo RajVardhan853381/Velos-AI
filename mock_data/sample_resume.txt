@@ -1,0 +1,215 @@
+"""
+Sample Resume for Velos Demo
+Use this for quick testing without uploading files.
+"""
+
+SAMPLE_RESUME_TEXT = """
+PROFESSIONAL SUMMARY
+Senior AI/ML Engineer with 3.5 years of experience building production-grade 
+LLM systems and intelligent applications. Strong expertise in Python, 
+RAG architectures, and cloud deployment. Passionate about creating fair 
+and unbiased AI systems.
+
+CONTACT INFORMATION
+Email: john.doe@example.com
+Phone: (555) 123-4567
+Location: San Francisco, CA
+LinkedIn: linkedin.com/in/johndoe
+GitHub: github.com/johndoe
+
+WORK EXPERIENCE
+
+Senior AI Engineer | TechCorp Inc. (January 2022 - Present)
+San Francisco, CA
+- Architected and deployed RAG systems using LangChain and Pinecone, 
+  serving 10,000+ daily queries with 95% accuracy
+- Led development of production LLM pipelines with 99.9% uptime
+- Reduced inference latency by 40% through intelligent caching and 
+  model optimization strategies
+- Mentored team of 3 junior engineers on GenAI best practices
+- Implemented comprehensive testing suite reducing bugs by 60%
+- Tech Stack: Python, FastAPI, AWS Lambda, Docker, PostgreSQL, Redis
+
+AI Developer | StartupXYZ (June 2020 - December 2021)
+Remote
+- Built NLP pipelines for document classification achieving 92% F1 score
+- Developed real-time sentiment analysis system processing 1M+ tweets daily
+- Implemented transformer-based models for named entity recognition
+- Created automated data labeling pipeline reducing annotation time by 70%
+- Tech Stack: Python, PyTorch, Hugging Face, GCP, MongoDB
+
+Software Engineering Intern | BigTech Corp (Summer 2019)
+New York, NY
+- Developed internal tools for ML model monitoring dashboard
+- Contributed to open-source data processing library
+- Tech Stack: Python, React, Kubernetes
+
+TECHNICAL SKILLS
+Languages: Python, JavaScript, TypeScript, SQL, Bash
+AI/ML: LangChain, LlamaIndex, PyTorch, TensorFlow, Hugging Face, spaCy
+GenAI: RAG, LLMs, Prompt Engineering, Fine-tuning, Embeddings
+Frameworks: FastAPI, Django, Flask, React, Node.js
+Cloud: AWS (Lambda, S3, SageMaker), GCP (Vertex AI, BigQuery), Azure
+Databases: PostgreSQL, MongoDB, Redis, Pinecone, Weaviate, ChromaDB
+DevOps: Docker, Kubernetes, CI/CD, GitHub Actions, Terraform
+Tools: Git, Jira, Confluence, Postman, Grafana
+
+PROJECTS
+
+1. Document Q&A System (2023)
+   Built enterprise RAG system that processes 500-page PDFs and answers 
+   questions with 95% accuracy. Implemented semantic chunking, hybrid 
+   search, and re-ranking for optimal retrieval.
+   Tech: LangChain, Pinecone, FastAPI, OpenAI
+
+2. LLM Fine-tuning Pipeline (2023)
+   Developed automated fine-tuning workflow that reduced training time 
+   by 60% and improved model performance by 15%. Includes data 
+   preprocessing, training orchestration, and evaluation.
+   Tech: PyTorch, Hugging Face, AWS SageMaker
+
+3. Bias Detection in Hiring (2022)
+   Created ML model to detect discriminatory language in job descriptions 
+   and hiring criteria. Achieved 89% accuracy in identifying biased terms.
+   Tech: Python, spaCy, scikit-learn, Streamlit
+
+4. Real-time Text Classification API (2021)
+   Built scalable API serving ML models for text classification with 
+   sub-100ms latency. Handles 10K+ requests per minute.
+   Tech: FastAPI, Redis, Docker, Kubernetes
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+Stanford University (Class of 2020)
+- GPA: 3.8/4.0
+- Relevant Coursework: Machine Learning, NLP, Distributed Systems
+- Senior Thesis: "Efficient Attention Mechanisms for Document Processing"
+
+CERTIFICATIONS
+- AWS Certified Solutions Architect - Associate (2023)
+- Google Cloud Professional Machine Learning Engineer (2022)
+- Deep Learning Specialization - Coursera (2021)
+
+PUBLICATIONS & TALKS
+- "Scaling RAG Systems for Enterprise" - AI Conference 2023
+- "Practical LLM Fine-tuning" - Tech Blog, 50K+ views
+- Open Source Contributor: LangChain, Hugging Face Transformers
+
+LANGUAGES
+- English (Native)
+- Spanish (Conversational)
+
+INTERESTS
+- Open source AI development
+- AI ethics and fairness
+- Running and hiking
+"""
+
+
+SAMPLE_JOB_DESCRIPTION = """
+Senior AI Engineer
+Location: Remote (US)
+Company: InnovateTech AI
+
+About Us:
+We're building the next generation of AI-powered enterprise solutions. 
+Our platform helps Fortune 500 companies automate complex workflows 
+using cutting-edge LLM technology.
+
+The Role:
+We're looking for a talented Senior AI Engineer to lead development of 
+our core AI infrastructure. You'll work on RAG systems, LLM integrations, 
+and scalable ML pipelines.
+
+Requirements:
+- 2+ years of professional experience in AI/ML development
+- Strong proficiency in Python programming
+- Hands-on experience with LLMs (GPT, Claude, Llama, etc.)
+- Experience building RAG systems and vector search
+- Familiarity with LangChain, LlamaIndex, or similar frameworks
+- FastAPI, Django, or Flask experience
+- AWS or GCP cloud deployment experience
+- Strong SQL and database design skills
+- Experience with Docker and containerization
+- Excellent communication skills
+
+Nice to Have:
+- Kubernetes and infrastructure automation
+- LLM fine-tuning experience
+- Production ML monitoring and observability
+- Open source contributions
+- Experience with AI ethics and bias mitigation
+
+What We Offer:
+- Competitive salary ($180K - $250K)
+- Equity package
+- Full remote work
+- Health, dental, vision insurance
+- 401(k) matching
+- Learning budget ($5K/year)
+- Flexible PTO
+
+Our Values:
+- Build with integrity
+- Embrace diversity
+- Continuous learning
+- Customer obsession
+
+To Apply:
+Submit your resume and a brief cover letter explaining why you're 
+excited about this role. We're committed to fair hiring practices 
+and evaluate all candidates equally.
+"""
+
+
+# For testing: lower experience candidates
+SAMPLE_RESUME_JUNIOR = """
+PROFESSIONAL SUMMARY
+Entry-level software developer with 1 year of internship experience.
+Eager to learn and grow in AI/ML engineering.
+
+WORK EXPERIENCE
+
+Software Engineering Intern | LocalStartup (Summer 2024)
+- Worked on Python scripts for data processing
+- Learned basics of machine learning
+- Tech: Python, pandas
+
+SKILLS
+Python (beginner), SQL (basic), Git
+
+EDUCATION
+Bachelor of Science in Computer Science
+State University (Class of 2024)
+- GPA: 3.2/4.0
+"""
+
+
+# For testing: fraudulent/exaggerated resume
+SAMPLE_RESUME_SUSPICIOUS = """
+PROFESSIONAL SUMMARY
+World-class AI genius with 10 years of experience despite graduating 
+2 years ago. Invented several breakthrough technologies.
+
+WORK EXPERIENCE
+
+Chief AI Architect | Every Major Tech Company (2020-Present)
+- Single-handedly built GPT-5
+- Personally trained Claude
+- Created all of LangChain
+- Solved AGI
+- Tech: Everything
+
+SKILLS
+All skills at expert level. I know everything about AI.
+
+EDUCATION
+PhD, Masters, and Bachelor's in AI from All Universities
+- 5.0 GPA
+
+ACHIEVEMENTS
+- Invented deep learning
+- Nobel Prize winner
+- Time Person of the Year
+"""
