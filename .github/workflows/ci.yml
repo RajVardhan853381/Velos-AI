@@ -1,0 +1,43 @@
+name: Velos Backend CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.8.2
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Install dependencies
+      working-directory: ./backend
+      run: poetry install --no-interaction --no-root
+        
+    - name: Run linting (Ruff)
+      working-directory: ./backend
+      run: poetry run ruff check .
+
+    - name: Run Tests
+      working-directory: ./backend
+      env:
+        ENVIRONMENT: dev
+        JWT_SECRET: "test_secret_ci_key"
+        GROQ_API_KEY: "test"
+        ETHEREUM_PRIVATE_KEY: "0xTest"
+      run: poetry run pytest tests/ -v

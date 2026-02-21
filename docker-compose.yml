@@ -1,56 +1,69 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: velos-backend
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - ENVIRONMENT=production
-      - ANONYMIZED_TELEMETRY=False
-      - CHROMA_TELEMETRY=False
     volumes:
-      - ./logs:/app/logs
+      - ./backend:/app/backend
+      - ./server.py:/app/server.py
+      - ./agents:/app/agents
+      - ./utils:/app/utils
+      - ./zynd:/app/zynd
+      - ./.env:/app/.env
+      - ./velos.db:/app/velos.db
       - ./chroma_db:/app/chroma_db
-      - ./uploads:/app/uploads
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - velos-network
+    environment:
+      - ENVIRONMENT=dev
+      - DATABASE_URL=sqlite+aiosqlite:///./velos.db
+      - PYTHONPATH=/app
+    command: uvicorn backend.app.main:create_app --host 0.0.0.0 --port 8000 --reload --factory
+    depends_on:
+      - postgres
+      - chromadb
 
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
-    container_name: velos-frontend
+      dockerfile: frontend/Dockerfile
     ports:
-      - "5173:80"
-    depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    networks:
-      - velos-network
+      - "5173:5173"
+    volumes:
+      - ./velos-frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host 0.0.0.0
 
-networks:
-  velos-network:
-    driver: bridge
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=velos
+      - POSTGRES_PASSWORD=velos_dev
+      - POSTGRES_DB=velos_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chroma_db:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=False
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # UI
 
 volumes:
-  logs:
-  chroma_db:
-  uploads:
+  postgres_data:

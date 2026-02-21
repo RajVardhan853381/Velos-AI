@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, ShieldCheck, Network, Activity, Eye, 
+import {
+  LayoutDashboard, ShieldCheck, Network, Activity, Eye,
   Database, Trophy, GitCompare, Zap, Users, Menu, X,
   Sparkles, TrendingUp, CheckCircle2, Cpu, Upload,
   Search, MessageSquare, ClipboardList, Shield, Settings as SettingsIcon
@@ -27,6 +27,8 @@ const AssessmentGenerator = lazy(() => import('./components/AssessmentGenerator'
 const AntiCheat = lazy(() => import('./components/AntiCheat'));
 const AuditTrail = lazy(() => import('./components/AuditTrail'));
 const Settings = lazy(() => import('./components/Settings'));
+const CandidateWallet = lazy(() => import('./components/CandidateWallet'));
+const AgentGraph = lazy(() => import('./components/AgentGraph'));
 
 // Static nav & quick-action config — defined outside App to avoid re-creation on render
 const NAV_ITEMS = [
@@ -44,6 +46,8 @@ const NAV_ITEMS = [
   { id: 'compare', label: 'Compare', icon: GitCompare, badge: null },
   { id: 'batch-upload', label: 'Batch Upload', icon: Upload, badge: null },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, badge: null },
+  { id: 'wallet', label: 'Zynd Wallet', icon: Shield, badge: 'Hackathon' },
+  { id: 'agent-flow', label: 'Agent Flow', icon: Network, badge: 'Hackathon' },
   { id: 'audit', label: 'Audit Trail', icon: Activity, badge: null },
   { id: 'godmode', label: 'God Mode', icon: Zap, badge: null },
   { id: 'settings', label: 'Settings', icon: SettingsIcon, badge: null }
@@ -71,7 +75,7 @@ const AnimatedBackground = () => {
         }}
         className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-400/30 via-blue-500/30 to-indigo-600/30 rounded-full blur-3xl"
       />
-      
+
       <motion.div
         animate={prefersReducedMotion ? false : {
           x: [0, -150, 0],
@@ -86,7 +90,7 @@ const AnimatedBackground = () => {
         }}
         className="absolute top-1/3 right-0 w-[700px] h-[700px] bg-gradient-to-br from-blue-400/20 via-violet-500/25 to-purple-600/30 rounded-full blur-3xl"
       />
-      
+
       <motion.div
         animate={prefersReducedMotion ? false : {
           x: [0, 80, 0],
@@ -120,8 +124,8 @@ const GlassNavItem = ({ icon: Icon, label, active, onClick, badge }) => {
       <div className={`
         relative flex items-center gap-3 px-5 py-3 rounded-2xl
         transition-all duration-300
-        ${active 
-          ? 'text-white shadow-lg shadow-purple-500/30' 
+        ${active
+          ? 'text-white shadow-lg shadow-purple-500/30'
           : 'text-gray-700 hover:text-purple-700'
         }
       `}>
@@ -137,7 +141,7 @@ const GlassNavItem = ({ icon: Icon, label, active, onClick, badge }) => {
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           />
         )}
-        
+
         {/* Glass Hover Effect */}
         {!active && (
           <motion.div
@@ -158,7 +162,7 @@ const GlassNavItem = ({ icon: Icon, label, active, onClick, badge }) => {
         >
           <Icon size={20} className={active ? 'drop-shadow-lg' : ''} />
         </motion.div>
-        
+
         <span className="relative z-10 text-sm font-semibold whitespace-nowrap">
           {label}
         </span>
@@ -196,15 +200,15 @@ const GlassStatsCard = ({ icon: Icon, title, value, trend, gradient, delay = 0 }
       initial={{ opacity: 0, y: 20, rotateX: -15 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
       transition={{ delay, duration: 0.5 }}
-      whileHover={{ 
-        scale: 1.05, 
+      whileHover={{
+        scale: 1.05,
         rotateY: 5,
         rotateX: 5,
         transition: { duration: 0.3 }
       }}
       className="relative group perspective-1000"
     >
-      <div 
+      <div
         className="relative rounded-3xl p-6 transform-gpu transition-all duration-300"
         style={{
           background: 'rgba(255, 255, 255, 0.3)',
@@ -214,12 +218,12 @@ const GlassStatsCard = ({ icon: Icon, title, value, trend, gradient, delay = 0 }
         }}
       >
         {/* Gradient Overlay */}
-        <div 
+        <div
           className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-300`}
         />
 
         {/* Icon with Glow */}
-        <motion.div 
+        <motion.div
           whileHover={{ rotate: 360, scale: 1.1 }}
           transition={{ duration: 0.6 }}
           className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-sm flex items-center justify-center mb-4"
@@ -228,7 +232,7 @@ const GlassStatsCard = ({ icon: Icon, title, value, trend, gradient, delay = 0 }
           }}
         >
           <Icon className={`${gradient.includes('purple') ? 'text-purple-600' : 'text-blue-600'}`} size={28} />
-          
+
           {/* Icon Glow */}
           <motion.div
             animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.8, 1.2, 0.8] }}
@@ -240,7 +244,7 @@ const GlassStatsCard = ({ icon: Icon, title, value, trend, gradient, delay = 0 }
         <div className="relative">
           <h3 className="text-sm font-semibold text-gray-600 mb-1">{title}</h3>
           <div className="flex items-end gap-3">
-            <motion.p 
+            <motion.p
               className="text-3xl font-bold bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent"
               initial={{ scale: 0.5 }}
               animate={{ scale: 1 }}
@@ -253,9 +257,8 @@ const GlassStatsCard = ({ icon: Icon, title, value, trend, gradient, delay = 0 }
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: delay + 0.3 }}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                  trend > 0 ? 'bg-green-100/80 text-green-700' : 'bg-red-100/80 text-red-700'
-                }`}
+                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${trend > 0 ? 'bg-green-100/80 text-green-700' : 'bg-red-100/80 text-red-700'
+                  }`}
               >
                 <TrendingUp size={14} className={trend < 0 ? 'rotate-180' : ''} />
                 {Math.abs(trend)}%
@@ -279,7 +282,7 @@ const QuickActionCard = ({ icon: Icon, title, description, onClick, gradient }) 
     onClick={onClick}
     className="relative group text-left transform-gpu perspective-1000"
   >
-    <div 
+    <div
       className="relative rounded-3xl p-6 transition-all duration-300"
       style={{
         background: 'rgba(255, 255, 255, 0.25)',
@@ -290,7 +293,7 @@ const QuickActionCard = ({ icon: Icon, title, description, onClick, gradient }) 
     >
       {/* Gradient Background on Hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-15 rounded-3xl transition-opacity`} />
-      
+
       {/* Icon */}
       <motion.div
         whileHover={{ rotate: [0, -5, 5, -5, 0], scale: 1.1 }}
@@ -362,13 +365,13 @@ function App() {
       .then(data => {
         const targets = data
           ? {
-              candidates: data.total_candidates ?? 0,
-              verified: data.approved_total ?? 0,
-              agents: 3,
-              accuracy: data.total_candidates > 0
-                ? Math.round((data.approved_total / data.total_candidates) * 100)
-                : 0,
-            }
+            candidates: data.total_candidates ?? 0,
+            verified: data.approved_total ?? 0,
+            agents: 3,
+            accuracy: data.total_candidates > 0
+              ? Math.round((data.approved_total / data.total_candidates) * 100)
+              : 0,
+          }
           : { candidates: 0, verified: 0, agents: 3, accuracy: 0 };
         timer = animate(targets);
       })
@@ -482,6 +485,12 @@ function App() {
           return <GodMode />;
         case 'settings':
           return <Settings />;
+        case 'wallet':
+          return <CandidateWallet />;
+        case 'agent-flow':
+          return <AgentGraph />;
+        case 'zynd-search':
+          return <Dashboard />; // alias
         default:
           return <Dashboard />;
       }
@@ -496,7 +505,7 @@ function App() {
     // Wrap content in glass container for non-dashboard tabs
     if (activeTab !== 'dashboard') {
       return (
-        <div 
+        <div
           className="rounded-3xl p-8"
           style={{
             background: 'rgba(255, 255, 255, 0.35)',
@@ -511,7 +520,7 @@ function App() {
         </div>
       );
     }
-    
+
     return (
       <ErrorBoundary>
         <Suspense fallback={fallback}>{content}</Suspense>
@@ -524,12 +533,12 @@ function App() {
       <AnimatedBackground />
 
       {/* Top Navigation Bar - Glassmorphic */}
-      <motion.nav 
+      <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="sticky top-0 z-50 mb-8"
       >
-        <div 
+        <div
           className="mx-4 mt-4 rounded-3xl"
           style={{
             background: 'rgba(255, 255, 255, 0.4)',
@@ -541,12 +550,12 @@ function App() {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-3"
                 whileHover={{ scale: 1.05 }}
               >
-                <motion.div 
-                  animate={{ 
+                <motion.div
+                  animate={{
                     rotate: 360,
                     boxShadow: [
                       '0 0 20px rgba(168, 85, 247, 0.3)',
@@ -554,7 +563,7 @@ function App() {
                       '0 0 20px rgba(168, 85, 247, 0.3)'
                     ]
                   }}
-                  transition={{ 
+                  transition={{
                     rotate: { duration: 20, repeat: Infinity, ease: "linear" },
                     boxShadow: { duration: 2, repeat: Infinity }
                   }}
@@ -656,11 +665,11 @@ function App() {
               >
                 {/* Background Decoration */}
                 <motion.div
-                  animate={{ 
+                  animate={{
                     rotate: 360,
                     scale: [1, 1.2, 1]
                   }}
-                  transition={{ 
+                  transition={{
                     rotate: { duration: 30, repeat: Infinity, ease: "linear" },
                     scale: { duration: 8, repeat: Infinity }
                   }}
@@ -802,15 +811,13 @@ function App() {
                       <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className={`w-3 h-3 rounded-full ${
-                          item.color === 'green' ? 'bg-green-500' :
+                        className={`w-3 h-3 rounded-full ${item.color === 'green' ? 'bg-green-500' :
                           item.color === 'blue' ? 'bg-blue-500' : 'bg-purple-500'
-                        } shadow-lg`}
+                          } shadow-lg`}
                         style={{
-                          boxShadow: `0 0 12px ${
-                            item.color === 'green' ? 'rgba(34, 197, 94, 0.6)' :
+                          boxShadow: `0 0 12px ${item.color === 'green' ? 'rgba(34, 197, 94, 0.6)' :
                             item.color === 'blue' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(168, 85, 247, 0.6)'
-                          }`
+                            }`
                         }}
                       />
                       <div>

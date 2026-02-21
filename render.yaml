@@ -1,15 +1,21 @@
 services:
   - type: web
-    name: velos-ai
-    env: python
-    region: oregon
+    name: velos-backend
+    env: docker
+    region: ohio
     plan: free
-    buildCommand: |
-      pip install --no-cache-dir -r requirements.txt
-      python -m spacy download en_core_web_sm --no-cache-dir
-    startCommand: python server.py
+    branch: main
+    dockerContext: .
+    dockerfilePath: backend/Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.0
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set via Render Dashboard (Neon DB URL)
+      - key: JWT_SECRET
+        sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: ETHEREUM_PRIVATE_KEY
+        sync: false
+    autoDeploy: true
