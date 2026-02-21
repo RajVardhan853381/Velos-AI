@@ -10,6 +10,8 @@ import json
 import uuid
 import asyncio
 import io
+import csv
+import base64
 import hashlib
 import time
 from datetime import datetime
@@ -227,7 +229,7 @@ async def health_check():
 
 @app.get("/api/health")
 async def api_health_check():
-    """API health check for frontend - returns uptime and memory"""
+    """API health check for frontend - returns uptime, memory, and hackathon pitch summary"""
     uptime_seconds = int(time.time() - START_TIME)
     memory_usage_mb = 0.0
     try:
@@ -238,10 +240,134 @@ async def api_health_check():
     except Exception:
         pass
 
+    zynd_sdk = False
+    try:
+        from zynd import _SDK_AVAILABLE
+        zynd_sdk = _SDK_AVAILABLE
+    except Exception:
+        pass
+
     return {
         "status": "healthy" if ORCHESTRATOR_AVAILABLE else "degraded",
         "uptime": uptime_seconds,
-        "memory_usage": memory_usage_mb
+        "memory_usage": memory_usage_mb,
+        "groq_configured": bool(os.getenv("GROQ_API_KEY", "").strip()),
+        "pitch": {
+            "project": "Velos — Decentralized Blind Hiring Protocol",
+            "track": "ZYND AIckathon 2025 — Fair Hiring Network",
+            "tagline": "Three AI agents. Zero bias. Every candidate judged on merit alone.",
+            "zynd_sdk_live": zynd_sdk,
+            "agents": ["BlindGatekeeper", "SkillValidator", "Inquisitor"],
+            "highlights": [
+                "PII-blind resume screening via Groq Llama-3.3-70b",
+                "W3C Verifiable Credentials with Ethereum signatures",
+                "Zynd agent discovery handshake (SearchAndDiscoveryManager)",
+                "Persistent credentials + revocations in SQLite",
+                "Per-endpoint rate limiting for production stability",
+            ],
+        },
+    }
+
+
+@app.get("/api/pitch")
+async def get_pitch():
+    """
+    Hackathon pitch endpoint — full narrative + live system stats.
+    Returns a self-contained pitch document judges can call directly.
+    """
+    uptime_seconds = int(time.time() - START_TIME)
+    zynd_sdk = False
+    zynd_version = "N/A"
+    try:
+        from zynd import _SDK_AVAILABLE, __version__ as _v
+        zynd_sdk = _SDK_AVAILABLE
+        zynd_version = _v
+    except Exception:
+        pass
+
+    agents_registered = 0
+    credentials_issued = 0
+    if ORCHESTRATOR_AVAILABLE and orchestrator:
+        proto = getattr(orchestrator, "protocol", None)
+        if proto:
+            stats = proto.get_network_stats()
+            agents_registered = stats.get("registered_agents", 0)
+            credentials_issued = stats.get("total_credentials", 0)
+
+    return {
+        "project": "Velos",
+        "subtitle": "Decentralized Blind Hiring Protocol",
+        "track": "ZYND AIckathon 2025 — Fair Hiring Network",
+        "tagline": "Three AI agents. Zero bias. Every candidate judged on merit alone.",
+        "problem": (
+            "Hiring is broken. Résumé screening is riddled with unconscious bias — "
+            "name, gender, age, school prestige — all leak through before the first "
+            "interview question is asked. Candidates have no portable proof of their "
+            "verified skills, and companies have no auditable paper trail."
+        ),
+        "solution": (
+            "Velos runs every résumé through a 3-stage AI pipeline where each agent "
+            "sees only what it needs: eligibility data, anonymized skill signals, and "
+            "Q&A authenticity scores. PII is redacted before any LLM touches the text. "
+            "Each stage issues a W3C Verifiable Credential signed by an Ethereum key, "
+            "giving candidates a portable, tamper-proof record of their abilities."
+        ),
+        "zynd_integration": {
+            "sdk_version": zynd_version,
+            "sdk_live": zynd_sdk,
+            "components_used": [
+                "IdentityManager — DID creation for each agent",
+                "SearchAndDiscoveryManager — agent registry + capability discovery",
+                "AgentCommunicationManager — authenticated inter-agent messaging",
+            ],
+            "discovery_endpoint": "/api/agents/discover",
+            "agents_registered": agents_registered,
+        },
+        "pipeline": [
+            {
+                "agent": "BlindGatekeeper",
+                "role": "Eligibility + PII Redaction",
+                "credential": "EligibilityCredential",
+                "llm": "Groq Llama-3.3-70b",
+            },
+            {
+                "agent": "SkillValidator",
+                "role": "JD-to-Resume Skill Matching",
+                "credential": "SkillMatchCredential",
+                "llm": "Groq Llama-3.3-70b",
+            },
+            {
+                "agent": "Inquisitor",
+                "role": "Technical Q&A + Fraud Detection",
+                "credential": "AuthenticityCredential",
+                "llm": "Groq Llama-3.3-70b",
+            },
+        ],
+        "credentials": {
+            "standard": "W3C Verifiable Credentials Data Model 1.1",
+            "proof_type": "EthereumEip712Signature2021",
+            "persistence": "SQLite (survives restarts)",
+            "revocation": "RevocationList2021Status (SQLite-backed)",
+            "total_issued": credentials_issued,
+            "candidate_export_endpoint": "/api/candidates/{candidate_id}/credentials",
+        },
+        "live_stats": {
+            "server_uptime_seconds": uptime_seconds,
+            "orchestrator_online": ORCHESTRATOR_AVAILABLE,
+            "total_candidates_processed": state.total_candidates,
+            "total_approved": state.approved,
+            "fraud_detected": state.fraud_detected,
+        },
+        "api_endpoints": {
+            "verify": "POST /api/verify",
+            "agents": "GET /api/agents",
+            "discover": "GET /api/agents/discover",
+            "candidate_credentials": "GET /api/candidates/{id}/credentials",
+            "pitch": "GET /api/pitch",
+            "health": "GET /api/health",
+        },
+        "repo_track": "Fair Hiring Network",
+        "built_with": ["FastAPI", "Groq", "zyndai-agent 0.2.2", "Web3.py", "SQLite", "React + Vite"],
     }
 
 @app.get("/api/status")
@@ -290,35 +416,105 @@ async def get_stats():
 
 @app.get("/api/agents")
 async def get_agents():
-    """Get agent information and stats - formatted for GodMode component"""
-    
-    # Helper function to calculate metrics from agent stats
-    def format_agent_stats(agent_name: str, role: str, stats: dict) -> dict:
+    """Get agent information, stats, and Zynd DID identities"""
+
+    def format_agent_stats(agent_name: str, role: str, stats: dict, identity: Optional[Dict[str, Any]] = None) -> dict:
         processed = stats.get("processed", 0)
         passed = stats.get("passed", 0)
-        
-        # Calculate success rate
         success_rate = round((passed / processed * 100) if processed > 0 else 0, 1)
-        
-        # Get average time (default to reasonable values if not tracked)
         avg_time = stats.get("avg_time", 1.5)
-        
-        return {
+
+        entry: Dict[str, Any] = {
             "name": agent_name,
             "role": role,
             "status": "active" if ORCHESTRATOR_AVAILABLE else "idle",
             "processed": processed,
             "successRate": success_rate,
-            "avgTime": avg_time
+            "avgTime": avg_time,
         }
-    
+
+        # Attach DID info when available
+        if identity and isinstance(identity, dict):
+            did_str = identity.get("id") or identity.get("did")
+            entry["did"] = did_str
+            entry["didDocument"] = identity
+
+        return entry
+
+    # Collect agent identities from orchestrator when available
+    agent1_id = getattr(orchestrator, "agent1_identity", None) if orchestrator else None
+    agent2_id = getattr(orchestrator, "agent2_identity", None) if orchestrator else None
+    agent3_id = getattr(orchestrator, "agent3_identity", None) if orchestrator else None
+
+    # Zynd SDK status
+    zynd_sdk_available = False
+    zynd_version = "N/A"
+    if ORCHESTRATOR_AVAILABLE:
+        try:
+            from zynd import _SDK_AVAILABLE, __version__ as _zynd_ver
+            zynd_sdk_available = _SDK_AVAILABLE
+            zynd_version = _zynd_ver
+        except Exception:
+            pass
+
     return {
         "agents": [
-            format_agent_stats("Gatekeeper", "Entry Filter", state.agent_stats["gatekeeper"]),
-            format_agent_stats("Validator", "Verification", state.agent_stats["validator"]),
-            format_agent_stats("Inquisitor", "Deep Analysis", state.agent_stats["inquisitor"])
-        ]
+            format_agent_stats("Gatekeeper", "Entry Filter", state.agent_stats["gatekeeper"], agent1_id),
+            format_agent_stats("Validator", "Verification", state.agent_stats["validator"], agent2_id),
+            format_agent_stats("Inquisitor", "Deep Analysis", state.agent_stats["inquisitor"], agent3_id),
+        ],
+        "zynd": {
+            "sdk_available": zynd_sdk_available,
+            "sdk_version": zynd_version,
+            "protocol": "Zynd AIckathon 2025 — Fair Hiring Network",
+        },
     }
+
+
+@app.get("/api/agents/discover")
+async def discover_agents(capabilities: Optional[str] = None):
+    """
+    Zynd agent discovery handshake endpoint.
+    Returns all Velos agents registered in the Zynd SearchAndDiscoveryManager,
+    optionally filtered by comma-separated capabilities.
+    """
+    if not ORCHESTRATOR_AVAILABLE or not orchestrator:
+        return {"agents": [], "total": 0, "note": "Orchestrator not available"}
+
+    protocol = getattr(orchestrator, "protocol", None)
+    if not protocol:
+        # Blockchain mode — return agent identities directly
+        agents_out = []
+        for name, role, identity in [
+            ("BlindGatekeeper", "eligibility_check,pii_redaction,anonymization",
+             getattr(orchestrator, "agent1_identity", None)),
+            ("SkillValidator", "skill_matching,jd_parsing,scoring",
+             getattr(orchestrator, "agent2_identity", None)),
+            ("Inquisitor", "question_generation,authenticity_verification,fraud_detection",
+             getattr(orchestrator, "agent3_identity", None)),
+        ]:
+            if identity:
+                did_str = identity.get("id") or identity.get("did", "")
+                agents_out.append({
+                    "name": name,
+                    "capabilities": role.split(","),
+                    "did": did_str,
+                    "matchScore": 100,
+                })
+        return {"agents": agents_out, "total": len(agents_out), "source": "blockchain_did"}
+
+    # Zynd protocol mode — query SearchAndDiscoveryManager
+    cap_list = [c.strip() for c in capabilities.split(",")] if capabilities else None
+    try:
+        discovered = protocol.discover_agents(capabilities=cap_list, min_score=0.0)
+        return {
+            "agents": discovered,
+            "total": len(discovered),
+            "source": "zynd_registry",
+            "filter": cap_list,
+        }
+    except Exception as e:
+        return {"agents": [], "total": 0, "error": str(e)}
 
 @app.get("/api/audit")
 async def get_audit_trail():
@@ -367,7 +563,7 @@ async def verify_candidate(request: Request, verify_req: VerifyRequest):
             print(f"   JD length: {len(verify_req.job_description)} chars")
             
             # Run through the actual AI pipeline (offload blocking sync call)
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             pipeline_result = await loop.run_in_executor(
                 None,
                 lambda: orchestrator.run_verification_pipeline(
@@ -445,6 +641,12 @@ async def verify_candidate(request: Request, verify_req: VerifyRequest):
             
             if result["status"] == "passed":
                 state.approved += 1
+            elif result["status"] == "failed":
+                # Track fraud/rejection: increment fraud_detected for suspicious or rejected candidates
+                fraud_flags = pipeline_result.get("red_flags", [])
+                agent3_verdict = pipeline_result.get("pipeline_stages", {}).get("agent_3_evaluation", {}).get("verdict", "")
+                if agent3_verdict == "SUSPICIOUS" or "FRAUD" in str(fraud_flags).upper() or "SUSPICIOUS" in str(fraud_flags).upper():
+                    state.fraud_detected += 1
                 
             # Add successful audit log
             state.add_audit_log({
@@ -585,7 +787,7 @@ async def upload_resume(file: UploadFile = File(...)):
         file_content = await file.read()
         
         # Parse the resume (offload blocking call to thread pool)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         extracted_text, metadata = await loop.run_in_executor(
             None,
             lambda: resume_parser.parse_file(file_content, file.filename)
@@ -644,7 +846,7 @@ async def parse_resume(file: UploadFile = File(...)):
     
     try:
         file_content = await file.read()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         extracted_text, metadata = await loop.run_in_executor(
             None,
             lambda: resume_parser.parse_file(file_content, file.filename)
@@ -695,7 +897,7 @@ async def verify_file(
     try:
         # Read and parse the resume file (offload blocking call)
         file_content = await resume.read()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         extracted_text, parse_metadata = await loop.run_in_executor(
             None,
             lambda: resume_parser.parse_file(file_content, resume.filename)
@@ -741,7 +943,7 @@ async def verify_file(
         if ORCHESTRATOR_AVAILABLE and orchestrator:
             try:
                 # Run through the actual AI pipeline (offload blocking sync call)
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 pipeline_result = await loop.run_in_executor(
                     None,
                     lambda: orchestrator.run_verification_pipeline(
@@ -811,6 +1013,11 @@ async def verify_file(
                 
                 if result["status"] == "passed":
                     state.approved += 1
+                elif result["status"] == "failed":
+                    fraud_flags = pipeline_result.get("red_flags", [])
+                    agent3_verdict = pipeline_result.get("pipeline_stages", {}).get("agent_3_evaluation", {}).get("verdict", "")
+                    if agent3_verdict == "SUSPICIOUS" or "FRAUD" in str(fraud_flags).upper() or "SUSPICIOUS" in str(fraud_flags).upper():
+                        state.fraud_detected += 1
                     
             except Exception as e:
                 result["status"] = "failed"
@@ -1054,7 +1261,7 @@ async def get_blockchain_network_info():
         
         # Get account balance (offload blocking web3 RPC call)
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             balance_wei = await loop.run_in_executor(
                 None,
                 lambda: blockchain_mgr.w3.eth.get_balance(blockchain_mgr.account.address)
@@ -1113,6 +1320,55 @@ async def get_credential(credential_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/candidates/{candidate_id}/credentials")
+async def get_candidate_credentials(candidate_id: str):
+    """
+    Retrieve all W3C Verifiable Credentials issued for a candidate.
+
+    Credentials are loaded from the persistent SQLite store so they are
+    available even after a server restart.  Falls back to the in-memory
+    pipeline result when no SQLite records exist yet.
+    """
+    try:
+        if not ORCHESTRATOR_AVAILABLE or not orchestrator:
+            raise HTTPException(status_code=503, detail="Orchestrator not available")
+
+        credentials: List[Dict[str, Any]] = []
+
+        # Primary source: SQLite (survives restarts)
+        if orchestrator.audit_db:
+            try:
+                credentials = orchestrator.audit_db.get_credentials_for_candidate(candidate_id)
+            except Exception as _e:
+                logger.warning(f"DB credential fetch failed: {_e}")
+
+        # Fallback: current in-memory pipeline result
+        if not credentials and orchestrator.current_result:
+            result_cid = orchestrator.current_result.get("candidate_id", "")
+            if result_cid == candidate_id or not result_cid:
+                credentials = orchestrator.current_result.get("credentials_issued", [])
+
+        if not credentials:
+            return {
+                "candidate_id": candidate_id,
+                "credentials": [],
+                "total": 0,
+                "note": "No credentials found for this candidate",
+            }
+
+        return {
+            "candidate_id": candidate_id,
+            "credentials": credentials,
+            "total": len(credentials),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Candidate credentials error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/credentials/verify")
 async def verify_credential(request: Request):
     """
@@ -1155,18 +1411,34 @@ async def export_credential(credential_id: str, format: str = "json-ld"):
     - qr: QR code image (base64)
     """
     try:
-        if not ORCHESTRATOR_AVAILABLE or not orchestrator or not orchestrator.current_result or not orchestrator.w3c_credential_manager:
+        if not ORCHESTRATOR_AVAILABLE or not orchestrator or not orchestrator.w3c_credential_manager:
             raise HTTPException(status_code=404, detail="Credential system not available")
         
-        # Find the credential
-        credentials = orchestrator.current_result.get("credentials_issued", [])
         credential = None
-        
-        for cred in credentials:
-            if cred.get("id") == credential_id or credential_id in cred.get("id", ""):
-                credential = cred
-                break
-        
+
+        # 1. Search in-memory current result first (fastest)
+        if orchestrator.current_result:
+            credentials = orchestrator.current_result.get("credentials_issued", [])
+            for cred in credentials:
+                if cred.get("id") == credential_id or credential_id in cred.get("id", ""):
+                    credential = cred
+                    break
+
+        # 2. Fall back to SQLite — search all candidates' persisted credentials
+        if not credential and orchestrator.audit_db:
+            try:
+                # get_credentials_for_candidate requires a candidate_id; we search by credential id
+                # Use a direct query via audit_db connection
+                conn = orchestrator.audit_db.conn
+                row = conn.execute(
+                    "SELECT credential_data FROM verifiable_credentials WHERE credential_id = ?",
+                    (credential_id,)
+                ).fetchone()
+                if row:
+                    credential = json.loads(row[0])
+            except Exception as db_err:
+                logger.warning(f"SQLite credential lookup failed: {db_err}")
+
         if not credential:
             raise HTTPException(status_code=404, detail=f"Credential {credential_id} not found")
         
@@ -1420,7 +1692,9 @@ async def get_chart_data(chart_type: str):
 # ============ PHASE 5: BATCH PROCESSING & ANALYTICS ============
 
 @app.post("/api/batch-upload")
+@limiter.limit("5/minute")
 async def batch_upload(
+    request: Request,
     file: UploadFile = File(...),
     job_description: str = Form(""),
     min_years: int = Form(0)
@@ -1446,7 +1720,7 @@ async def batch_upload(
             raise HTTPException(status_code=400, detail="ZIP file too large (max 50MB)")
         
         # Process the batch (offload potentially multi-minute blocking call)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
             None,
             lambda: batch_processor.process_zip_file(
@@ -1484,7 +1758,7 @@ async def get_leaderboard(
         raise HTTPException(status_code=503, detail="Analytics not available")
     
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         leaderboard = await loop.run_in_executor(
             None,
             lambda: analytics_engine.get_leaderboard(
@@ -1518,7 +1792,7 @@ async def compare_candidates(candidate_a: str, candidate_b: str):
         raise HTTPException(status_code=400, detail="Both candidate IDs required")
     
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         comparison = await loop.run_in_executor(
             None,
             lambda: analytics_engine.compare_candidates(candidate_a, candidate_b)
@@ -1564,7 +1838,7 @@ async def export_report(
             ids = [cid.strip() for cid in candidate_ids.split(",")]
         
         # Generate CSV (offload blocking call)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         csv_bytes = await loop.run_in_executor(
             None,
             lambda: report_generator.generate_csv_bytes(
@@ -1610,7 +1884,6 @@ async def export_batch_report(batch_id: Optional[str] = None):
     
     # Create a simple stats report
     output = io.StringIO()
-    import csv
     writer = csv.writer(output)
     writer.writerow(["Metric", "Value"])
     writer.writerow(["Total Processed", stats["total_processed"]])
@@ -1660,7 +1933,7 @@ async def get_skill_distribution():
         raise HTTPException(status_code=503, detail="Analytics not available")
     
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         distribution = await loop.run_in_executor(
             None,
             analytics_engine.get_skill_distribution
@@ -1685,7 +1958,7 @@ async def get_candidate_dossier(candidate_id: str):
         raise HTTPException(status_code=503, detail="Report generation not available")
     
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         dossier = await loop.run_in_executor(
             None,
             lambda: report_generator.generate_detailed_report(candidate_id)
@@ -1829,7 +2102,8 @@ class ScreenResumeRequest(BaseModel):
     job_description: str = Field(..., min_length=20, max_length=10000)
 
 @app.post("/api/screen-resume")
-async def screen_resume(request: ScreenResumeRequest):
+@limiter.limit("30/minute")
+async def screen_resume(request: Request, screen_req: ScreenResumeRequest):
     """
     GenAI Resume Screener & Context Matcher.
     Returns compatibility score, 3-bullet summary, and 'hidden gem' flag.
@@ -1860,10 +2134,10 @@ Always respond with VALID JSON only. No markdown, no explanation outside the JSO
         user_prompt = f"""Analyze this resume against the job description.
 
 JOB DESCRIPTION:
-{request.job_description}
+{screen_req.job_description}
 
 RESUME:
-{request.resume_text}
+{screen_req.resume_text}
 
 Respond with this exact JSON structure:
 {{
@@ -1930,7 +2204,7 @@ async def extract_resume_text(resume_file: UploadFile = File(...)):
         raise HTTPException(status_code=503, detail="Resume parser not available")
     try:
         content = await resume_file.read()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         parse_result = await loop.run_in_executor(
             None,
             lambda: resume_parser.parse_file(content, resume_file.filename or "resume.pdf")
@@ -1956,6 +2230,7 @@ async def extract_resume_text(resume_file: UploadFile = File(...)):
 
 @app.post("/api/screen-resume-file")
 async def screen_resume_file(
+    request: Request,
     job_description: str = Form(...),
     resume_file: UploadFile = File(...)
 ):
@@ -1965,7 +2240,7 @@ async def screen_resume_file(
 
     try:
         content = await resume_file.read()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         parse_result = await loop.run_in_executor(
             None,
             lambda: resume_parser.parse_file(content, resume_file.filename or "resume.pdf")
@@ -1980,7 +2255,7 @@ async def screen_resume_file(
             raise HTTPException(status_code=400, detail="Could not extract enough text from the resume file")
 
         req = ScreenResumeRequest(resume_text=resume_text, job_description=job_description)
-        return await screen_resume(req)
+        return await screen_resume(request, req)
 
     except HTTPException:
         raise
@@ -2001,7 +2276,8 @@ class InterviewRespondRequest(BaseModel):
     answer: str = Field(..., min_length=1, max_length=5000)
 
 @app.post("/api/interview/start")
-async def start_interview(request: StartInterviewRequest):
+@limiter.limit("20/minute")
+async def start_interview(request: Request, interview_req: StartInterviewRequest):
     """Start a new AI interview session. Returns first question and session_id."""
     import os
     groq_key = os.getenv("GROQ_API_KEY", "")
@@ -2021,14 +2297,14 @@ async def start_interview(request: StartInterviewRequest):
             max_tokens=512
         )
 
-        system_prompt = f"""You are an expert technical interviewer conducting a first-round screening for a {request.job_role} position.
+        system_prompt = f"""You are an expert technical interviewer conducting a first-round screening for a {interview_req.job_role} position.
 You ask one focused question at a time. After each answer, you analyze the candidate's reasoning and clarity,
 then ask a relevant follow-up or move to the next topic.
 Keep questions concise and professional. Probe deeper when answers are vague."""
 
-        context = f"Job Role: {request.job_role}\nJob Description: {request.job_description}"
-        if request.resume_summary:
-            context += f"\nCandidate Background: {request.resume_summary}"
+        context = f"Job Role: {interview_req.job_role}\nJob Description: {interview_req.job_description}"
+        if interview_req.resume_summary:
+            context += f"\nCandidate Background: {interview_req.resume_summary}"
 
         opening_prompt = f"""{context}
 
@@ -2048,10 +2324,10 @@ Respond with ONLY the question text — no preamble, no labels."""
         _evict_oldest_session(interview_sessions)
         interview_sessions[session_id] = {
             "session_id": session_id,
-            "job_role": request.job_role,
-            "job_description": request.job_description,
-            "resume_summary": request.resume_summary,
-            "candidate_name": request.candidate_name,
+            "job_role": interview_req.job_role,
+            "job_description": interview_req.job_description,
+            "resume_summary": interview_req.resume_summary,
+            "candidate_name": interview_req.candidate_name,
             "system_prompt": system_prompt,
             "history": [
                 {"role": "interviewer", "content": first_question, "timestamp": datetime.now().isoformat()}
@@ -2075,14 +2351,15 @@ Respond with ONLY the question text — no preamble, no labels."""
 
 
 @app.post("/api/interview/respond")
-async def interview_respond(request: InterviewRespondRequest):
+@limiter.limit("60/minute")
+async def interview_respond(request: Request, respond_req: InterviewRespondRequest):
     """Submit a candidate answer and get the next AI question."""
     import os
     groq_key = os.getenv("GROQ_API_KEY", "")
     if not groq_key or groq_key.startswith("placeholder"):
         raise HTTPException(status_code=503, detail="Groq API key not configured")
 
-    session = interview_sessions.get(request.session_id)
+    session = interview_sessions.get(respond_req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Interview session not found")
     if session["status"] != "active":
@@ -2102,7 +2379,7 @@ async def interview_respond(request: InterviewRespondRequest):
         # Record the answer
         session["history"].append({
             "role": "candidate",
-            "content": request.answer,
+            "content": respond_req.answer,
             "timestamp": datetime.now().isoformat()
         })
 
@@ -2194,7 +2471,7 @@ Respond with ONLY the question text."""
             session["final_score"] = avg_score
             return {
                 "success": True,
-                "session_id": request.session_id,
+                "session_id": respond_req.session_id,
                 "status": "completed",
                 "evaluation": evaluation,
                 "final_score": avg_score,
@@ -2212,7 +2489,7 @@ Respond with ONLY the question text."""
 
         return {
             "success": True,
-            "session_id": request.session_id,
+            "session_id": respond_req.session_id,
             "question": next_question,
             "question_number": session["question_count"],
             "status": "active",
@@ -2237,7 +2514,7 @@ async def get_interview_session(session_id: str):
 
 class GenerateAssessmentRequest(BaseModel):
     role: str = Field(..., min_length=2, max_length=200, description="e.g. 'Frontend Developer'")
-    level: Literal["Junior", "Mid", "Senior"] = Field(..., description="Junior|Mid|Senior")
+    level: Literal["Junior", "Mid", "Senior", "Lead", "Principal"] = Field(..., description="Junior|Mid|Senior|Lead|Principal")
     tech_stack: str = Field(..., min_length=2, max_length=300, description="e.g. 'React, TypeScript, GraphQL'")
     num_questions: int = Field(default=5, ge=3, le=10)
 
@@ -2246,7 +2523,8 @@ class EvaluateAssessmentRequest(BaseModel):
     answers: Dict[str, str]  # question_id -> answer text
 
 @app.post("/api/assessment/generate")
-async def generate_assessment(request: GenerateAssessmentRequest):
+@limiter.limit("10/minute")
+async def generate_assessment(request: Request, assess_req: GenerateAssessmentRequest):
     """Generate a technical assessment with mixed MCQ and short-answer questions."""
     import os
     groq_key = os.getenv("GROQ_API_KEY", "")
@@ -2261,7 +2539,7 @@ async def generate_assessment(request: GenerateAssessmentRequest):
             groq_api_key=groq_key,
             model_name="llama-3.3-70b-versatile",
             temperature=0.6,
-            max_tokens=2048
+            max_tokens=4096
         )
 
         system_prompt = """You are a senior technical interviewer creating assessments.
@@ -2269,18 +2547,18 @@ Generate realistic, challenging questions appropriate to the level.
 Mix multiple-choice (with exactly 4 options) and short-answer/coding questions.
 Always respond with VALID JSON only."""
 
-        user_prompt = f"""Create a {request.num_questions}-question technical assessment for:
-Role: {request.role}
-Level: {request.level}
-Tech Stack: {request.tech_stack}
+        user_prompt = f"""Create a {assess_req.num_questions}-question technical assessment for:
+Role: {assess_req.role}
+Level: {assess_req.level}
+Tech Stack: {assess_req.tech_stack}
 
 Generate a mix: roughly 60% multiple-choice, 40% short-answer/coding.
 
 Respond with this EXACT JSON structure:
 {{
   "title": "<Assessment title>",
-  "role": "{request.role}",
-  "level": "{request.level}",
+  "role": "{assess_req.role}",
+  "level": "{assess_req.level}",
   "estimated_minutes": <integer>,
   "questions": [
     {{
@@ -2328,9 +2606,9 @@ Respond with this EXACT JSON structure:
             "assessment": assessment,
             "created_at": datetime.now().isoformat(),
             "status": "pending",
-            "role": request.role,
-            "level": request.level,
-            "tech_stack": request.tech_stack
+            "role": assess_req.role,
+            "level": assess_req.level,
+            "tech_stack": assess_req.tech_stack
         }
 
         # Strip correct answers before returning to candidate
@@ -2351,8 +2629,24 @@ Respond with this EXACT JSON structure:
             "generated_at": datetime.now().isoformat()
         }
 
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"LLM returned invalid JSON: {str(e)}")
+    except json.JSONDecodeError:
+        # LLM returned truncated JSON — retry once with fewer questions
+        try:
+            retry_prompt = f"Generate a {min(assess_req.num_questions, 3)}-question {assess_req.level} assessment for {assess_req.role} covering {assess_req.tech_stack}. Respond ONLY with valid JSON: {{\"title\":\"...\",\"role\":\"...\",\"level\":\"...\",\"estimated_minutes\":20,\"questions\":[{{\"id\":\"q1\",\"type\":\"multiple_choice\",\"question\":\"...\",\"options\":{{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"}},\"correct_answer\":\"A\",\"explanation\":\"...\",\"difficulty\":\"medium\",\"topic\":\"...\"}}]}}"
+            retry_response = await llm.ainvoke([HumanMessage(content=retry_prompt)])
+            retry_raw = retry_response.content.strip()
+            if retry_raw.startswith("```"):
+                retry_raw = retry_raw.split("```")[1]
+                if retry_raw.startswith("json"):
+                    retry_raw = retry_raw[4:]
+            assessment = json.loads(retry_raw.strip())
+            session_id = str(uuid.uuid4())
+            _evict_oldest_session(assessment_sessions)
+            assessment_sessions[session_id] = {"session_id": session_id, "assessment": assessment, "created_at": datetime.now().isoformat(), "status": "pending", "role": assess_req.role, "level": assess_req.level, "tech_stack": assess_req.tech_stack}
+            public_questions = [{k: v for k, v in q.items() if k not in ("correct_answer", "explanation", "sample_answer", "expected_concepts")} for q in assessment.get("questions", [])]
+            return {"success": True, "session_id": session_id, "title": assessment.get("title"), "role": assessment.get("role"), "level": assessment.get("level"), "estimated_minutes": assessment.get("estimated_minutes", 20), "questions": public_questions, "total_questions": len(public_questions), "generated_at": datetime.now().isoformat()}
+        except Exception:
+            raise HTTPException(status_code=503, detail="Assessment generation temporarily unavailable — please retry")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Assessment generation failed: {str(e)}")
 
@@ -2507,8 +2801,6 @@ Respond with VALID JSON only:
 
 # ==================== FEATURE 4: ANTI-CHEAT PROCTORING ====================
 
-import base64
-
 # Active proctoring sessions
 proctor_sessions: Dict[str, Any] = {}
 proctor_connections: Dict[str, List[WebSocket]] = {}
@@ -2612,7 +2904,7 @@ async def proctor_websocket(websocket: WebSocket, session_id: str):
 
                         if frame_cv is not None:
                             # Offload CPU-bound OpenCV work to thread pool
-                            loop = asyncio.get_event_loop()
+                            loop = asyncio.get_running_loop()
                             gray = await loop.run_in_executor(
                                 None,
                                 lambda: cv2.cvtColor(frame_cv, cv2.COLOR_BGR2GRAY)

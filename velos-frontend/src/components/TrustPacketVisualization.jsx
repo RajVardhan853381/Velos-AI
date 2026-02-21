@@ -261,8 +261,8 @@ const IntegrityBlock = ({ trustLayer, onVerify, verified }) => {
             animate={{ opacity: 1, scale: 1 }}
             className={`p-4 rounded-lg flex items-center gap-3 ${
               verified
-                ? 'bg-green-900/30 border border-green-200/60'
-                : 'bg-red-900/30 border border-red-200/60'
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-red-50 border border-red-200'
             }`}
           >
             {verified ? (
@@ -270,15 +270,15 @@ const IntegrityBlock = ({ trustLayer, onVerify, verified }) => {
                 <CheckCircle className="text-green-600" size={24} />
                 <div>
                   <p className="text-gray-900 font-semibold">Integrity Verified ✓</p>
-                  <p className="text-green-300 text-xs">Hash matches blockchain record</p>
+                  <p className="text-green-700 text-xs">Hash matches blockchain record</p>
                 </div>
               </>
             ) : (
               <>
-                <XCircle className="text-red-400" size={24} />
+                <XCircle className="text-red-500" size={24} />
                 <div>
                   <p className="text-gray-900 font-semibold">Verification Failed</p>
-                  <p className="text-red-300 text-xs">Data tampering detected</p>
+                  <p className="text-red-700 text-xs">Data tampering detected</p>
                 </div>
               </>
             )}
@@ -419,10 +419,10 @@ const TrustPacketVisualization = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg flex items-center gap-3"
+            className="mt-4 p-4 bg-red-50 border border-red-300 rounded-lg flex items-center gap-3"
           >
-            <AlertTriangle className="text-red-400" size={20} />
-            <p className="text-red-200">{error}</p>
+            <AlertTriangle className="text-red-500" size={20} />
+            <p className="text-red-700">{error}</p>
           </motion.div>
         )}
 

@@ -140,7 +140,10 @@ class VelosOrchestrator:
         self.agent1_identity: Optional[Dict[str, Any]] = None
         self.agent2_identity: Optional[Dict[str, Any]] = None
         self.agent3_identity: Optional[Dict[str, Any]] = None
-        
+
+        # Initialize AuditLog early so it can be passed to W3CVerifiableCredential
+        self.audit_db = AuditLog(db_path)
+
         # Initialize Blockchain DID Manager
         self.blockchain_did_manager: Optional[Any] = None
         self.w3c_credential_manager: Optional[Any] = None
@@ -155,9 +158,10 @@ class VelosOrchestrator:
                 print(f"   Wallet: {self.blockchain_did_manager.account.address}")
                 print(f"   Network: {self.blockchain_did_manager.network_name}")
                 
-                # Initialize W3C credential manager (pass private key, not manager object)
+                # Initialize W3C credential manager (pass private key + audit_db for persistence)
                 self.w3c_credential_manager = W3CVerifiableCredential(
-                    private_key=self.blockchain_did_manager.account.key.hex()
+                    private_key=self.blockchain_did_manager.account.key.hex(),
+                    audit_db=self.audit_db
                 )
                 print("✅ W3C Verifiable Credential Manager initialized")
                 
@@ -225,7 +229,7 @@ class VelosOrchestrator:
         self.gatekeeper = BlindGatekeeper()
         self.validator = SkillValidator()
         self.inquisitor = Inquisitor()
-        self.audit_db = AuditLog(db_path)
+        # self.audit_db already initialized at top of __init__
         
         # Initialize Vector Store for RAG
         self.vector_store: Optional[Any] = None
@@ -263,6 +267,15 @@ class VelosOrchestrator:
         identity = self.protocol.create_agent_identity(agent_type, agent_name, capabilities)
         self.protocol.register_agent(identity, capabilities)
         return identity
+
+    def _save_credential(self, candidate_id: str, credential: Optional[Dict]) -> None:
+        """Persist a verifiable credential to SQLite (best-effort, non-fatal)."""
+        if credential is None or not candidate_id:
+            return
+        try:
+            self.audit_db.save_credential(candidate_id, credential)
+        except Exception as _e:
+            print(f"[Orchestrator] Warning: could not persist credential to DB: {_e}")
     
     def _create_candidate_did(self, resume_hash: str) -> Optional[Dict[str, Any]]:
         """Create anonymous DID for candidate"""
@@ -282,8 +295,11 @@ class VelosOrchestrator:
         """Extract DID string from DID document"""
         if did_doc is None:
             return None
+        if isinstance(did_doc, str):
+            return did_doc
         if isinstance(did_doc, dict):
-            return did_doc.get("id", str(did_doc))
+            # DID result dicts use "did" key; DID documents use "id" key
+            return did_doc.get("did") or did_doc.get("id") or None
         return str(did_doc)
     
     def _generate_candidate_id(self, resume_text: str) -> str:
@@ -436,11 +452,17 @@ class VelosOrchestrator:
         
         # ============ TRUST LAYER: Visual Proof (Diff) ============
         # Compare original vs redacted text for UI visualization
-        if self.diff_engine and agent1_result.get("redacted_text"):
+        # Agent 1 stores redacted text under "clean_data_full_text" key
+        redacted_text_for_diff = (
+            agent1_result.get("clean_data_full_text")
+            or agent1_result.get("redacted_text")
+            or agent1_result.get("clean_data", {}).get("redacted_text", "")
+        )
+        if self.diff_engine and redacted_text_for_diff:
             print("🔍 Computing redaction diff (Visual Proof)...")
             diff_report = self.diff_engine.compute_diff_summary(
                 raw_resume,
-                agent1_result.get("redacted_text", "")
+                redacted_text_for_diff
             )
             result["trust_layer"] = {
                 "diff_report": diff_report,
@@ -495,6 +517,7 @@ class VelosOrchestrator:
                     }]
                 )
                 result["credentials_issued"].append(eligibility_credential)
+                self._save_credential(candidate_id, eligibility_credential)
                 
                 # Add blockchain metadata
                 if "blockchain_metadata" not in result:
@@ -510,6 +533,7 @@ class VelosOrchestrator:
                 if self.communication_hub and self.agent2_identity and AgentCommunicationHub:
                     message = self.communication_hub.send_message_sync(
                         recipient_did=self.agent2_identity.get("did") or self.agent2_identity.get("id", ""),
+                        message_type=AgentCommunicationHub.TASK_HANDOFF,
                         content={
                             "candidate_did": candidate_did_str,
                             "credential_id": eligibility_credential.get("id"),
@@ -643,6 +667,7 @@ class VelosOrchestrator:
                     }]
                 )
                 result["credentials_issued"].append(skill_credential)
+                self._save_credential(candidate_id, skill_credential)
                 
                 # Update blockchain metadata
                 if "blockchain_metadata" not in result:
@@ -655,6 +680,7 @@ class VelosOrchestrator:
                 if self.communication_hub and self.agent3_identity and AgentCommunicationHub:
                     message = self.communication_hub.send_message_sync(
                         recipient_did=self.agent3_identity.get("did") or self.agent3_identity.get("id", ""),
+                        message_type=AgentCommunicationHub.CREDENTIAL_ISSUED,
                         content={
                             "candidate_did": candidate_did_str,
                             "skill_credential_id": skill_credential.get("id"),
@@ -839,6 +865,7 @@ class VelosOrchestrator:
                     }]
                 )
                 self.current_result["credentials_issued"].append(authenticity_credential)
+                self._save_credential(self.current_candidate_id or "", authenticity_credential)
                 
                 # Update blockchain metadata
                 if "blockchain_metadata" not in self.current_result:
@@ -990,6 +1017,14 @@ class VelosOrchestrator:
             return {
                 "error": "No verification data available",
                 "candidate_id": cid
+            }
+
+        # If a specific candidate_id was requested, ensure it matches the current result
+        # to avoid returning another candidate's data when the requested one is not found.
+        if candidate_id and candidate_id != self.current_candidate_id:
+            return {
+                "error": "Candidate not found in current session",
+                "candidate_id": candidate_id
             }
         
         trust_layer = self.current_result.get("trust_layer", {})

@@ -263,7 +263,7 @@ Return ONLY valid JSON:
             results = vector_store.get_context_with_scores(
                 query=query,
                 candidate_id=candidate_id,
-                k=3
+                n_results=3
             )
             
             # Return only relevant chunks (score > 0.3)

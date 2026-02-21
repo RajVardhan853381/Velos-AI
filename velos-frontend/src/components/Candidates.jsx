@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Search, Filter, Download, Eye, CheckCircle, XCircle, Clock, TrendingUp, Award } from 'lucide-react';
+import { Users, Search, Filter, Download, Eye, CheckCircle, XCircle, Clock, TrendingUp, Award, WifiOff } from 'lucide-react';
 import { API_BASE } from '../config.js';
 
 const CandidateCard = ({ candidate, onClick }) => {
@@ -21,7 +21,7 @@ const CandidateCard = ({ candidate, onClick }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${statusColors[candidate.status] || 'from-slate-400 to-slate-500'} flex items-center justify-center shadow-md`}>
-            <span className="text-white font-bold text-lg">{((candidate.id || '').split('-')[1] || candidate.id || '?').charAt(0)}</span>
+            <span className="text-white font-bold text-lg">{(candidate.id || '?').charAt(0).toUpperCase()}</span>
           </div>
           <div>
             <h3 className="font-bold text-slate-800 text-lg group-hover:text-cyan-600 transition-colors">
@@ -186,6 +186,7 @@ const Candidates = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchCandidates();
@@ -199,13 +200,16 @@ const Candidates = () => {
       if (response.ok) {
         const data = await response.json();
         setCandidates(data.candidates || []);
+        setFetchError(null);
       } else {
         setCandidates([]);
+        setFetchError(`Failed to load candidates (HTTP ${response.status})`);
       }
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch candidates:', error);
       setCandidates([]);
+      setFetchError('Unable to reach the server. Candidate list unavailable.');
       setLoading(false);
     }
   };
@@ -241,6 +245,18 @@ const Candidates = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3 bg-red-50 border border-red-200 rounded-2xl text-red-700"
+        >
+          <WifiOff size={18} className="flex-shrink-0" />
+          <span className="text-sm font-medium flex-1">{fetchError}</span>
+          <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+        </motion.div>
+      )}
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

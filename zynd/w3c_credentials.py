@@ -59,20 +59,30 @@ class W3CVerifiableCredential:
     SKILL_MATCH_CREDENTIAL = "SkillMatchCredential"
     AUTHENTICITY_CREDENTIAL = "AuthenticityCredential"
     
-    def __init__(self, private_key: Optional[str] = None):
+    def __init__(self, private_key: Optional[str] = None, audit_db: Optional[Any] = None):
         """
         Initialize credential issuer.
-        
+
         Args:
             private_key: Ethereum private key for signing
+            audit_db: Optional AuditLog instance for persisting credentials and revocations.
+                      When provided, the in-memory revocation set is pre-populated from SQLite
+                      so revocations survive server restarts.
         """
         if private_key:
             self.account = Account.from_key(private_key)
         else:
             self.account = Account.create()
-        
-        # Revocation registry (in production, use blockchain or distributed DB)
+
+        self._audit_db = audit_db
+
+        # Revocation registry — in-memory set seeded from SQLite when audit_db is provided
         self.revoked_credentials: set = set()
+        if audit_db is not None:
+            try:
+                self.revoked_credentials = audit_db.load_revoked_credential_ids()
+            except Exception as _e:
+                pass  # Non-fatal: start with empty set
     
     def issue_credential(
         self,
@@ -267,20 +277,30 @@ class W3CVerifiableCredential:
     def revoke_credential(self, credential_id: str, reason: str = "Revoked by issuer") -> bool:
         """
         Revoke a credential.
-        
+
+        Adds the credential ID to the in-memory revocation set and, when an
+        audit_db was provided at init time, persists the revocation to SQLite
+        so it survives server restarts.
+
         Args:
             credential_id: ID of credential to revoke
             reason: Reason for revocation
-            
+
         Returns:
             True if revoked successfully
         """
         self.revoked_credentials.add(credential_id)
-        
-        # In production, publish to revocation list
-        print(f"🚫 Credential revoked: {credential_id}")
+
+        # Persist to SQLite when available
+        if self._audit_db is not None:
+            try:
+                self._audit_db.save_revocation(credential_id, reason)
+            except Exception as _e:
+                pass  # Non-fatal: in-memory set is already updated
+
+        print(f"Credential revoked: {credential_id}")
         print(f"   Reason: {reason}")
-        
+
         return True
     
     def is_revoked(self, credential_id: str) -> bool:

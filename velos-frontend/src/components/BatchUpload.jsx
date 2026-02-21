@@ -14,10 +14,13 @@ const BatchUpload = () => {
   // Use ref to track interval and prevent memory leaks
   const progressIntervalRef = useRef(null);
   const fileInputRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   // Cleanup interval on component unmount
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
@@ -100,9 +103,22 @@ const BatchUpload = () => {
 
       if (response.ok) {
         const data = await response.json();
+        // Backend returns { success, batch_result: { total, processed, passed, failed, ... } }
+        // Normalize to the shape the UI expects
+        const raw = data.batch_result || data;
+        const normalized = {
+          total_processed: raw.processed ?? raw.total_processed ?? 0,
+          passed: raw.passed ?? 0,
+          failed: raw.failed ?? 0,
+          average_score: raw.average_score ?? null,
+          results: raw.results ?? [],
+          summary: raw.summary ?? '',
+        };
         setTimeout(() => {
-          setResults(data);
-          setUploading(false);
+          if (isMountedRef.current) {
+            setResults(normalized);
+            setUploading(false);
+          }
         }, 500);
       } else {
         throw new Error('Upload failed');

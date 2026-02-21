@@ -110,7 +110,33 @@ class AuditLog:
                 FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
             )
         ''')
-        
+
+        # Verifiable credentials - persist W3C VCs issued during pipeline
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS verifiable_credentials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                credential_id TEXT UNIQUE NOT NULL,
+                candidate_id TEXT NOT NULL,
+                credential_type TEXT NOT NULL,
+                issuer_did TEXT,
+                subject_did TEXT,
+                credential_json TEXT NOT NULL,
+                issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP,
+                FOREIGN KEY(candidate_id) REFERENCES candidates(candidate_id)
+            )
+        ''')
+
+        # Credential revocations - persisted so they survive server restarts
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS credential_revocations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                credential_id TEXT UNIQUE NOT NULL,
+                reason TEXT,
+                revoked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         self.conn.commit()
     
     def save_candidate(self, candidate_id: str, initial_status: str = "PENDING") -> int:
@@ -411,6 +437,151 @@ class AuditLog:
         """Close database connection"""
         if self.conn:
             self.conn.close()
+
+    # ------------------------------------------------------------------ #
+    # Verifiable Credentials                                               #
+    # ------------------------------------------------------------------ #
+
+    def save_credential(self, candidate_id: str, credential: Dict) -> int:
+        """
+        Persist a W3C Verifiable Credential for a candidate.
+
+        Args:
+            candidate_id: The Velos candidate ID (e.g. 'CAND-ABCD1234')
+            credential: The full credential dict (W3C JSON-LD)
+
+        Returns:
+            Row ID of the inserted credential, or -1 on failure.
+        """
+        if self.conn is None:
+            return -1
+        cursor = self.conn.cursor()
+
+        credential_id = credential.get("id", "")
+        credential_type = (credential.get("type") or ["VerifiableCredential"])[-1]
+        issuer = credential.get("issuer", "")
+        if isinstance(issuer, dict):
+            issuer = issuer.get("id", str(issuer))
+        subject = credential.get("credentialSubject", {}).get("id", "")
+        expires_at = credential.get("expirationDate")
+
+        try:
+            cursor.execute('''
+                INSERT OR REPLACE INTO verifiable_credentials
+                (credential_id, candidate_id, credential_type, issuer_did,
+                 subject_did, credential_json, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                credential_id,
+                candidate_id,
+                credential_type,
+                issuer,
+                subject,
+                json.dumps(credential),
+                expires_at,
+            ))
+            self.conn.commit()
+            return cursor.lastrowid or -1
+        except Exception as e:
+            db_logger.error(f"Error saving credential: {e}")
+            return -1
+
+    def get_credentials_for_candidate(self, candidate_id: str) -> List[Dict]:
+        """
+        Retrieve all verifiable credentials issued for a candidate.
+
+        Args:
+            candidate_id: The Velos candidate ID
+
+        Returns:
+            List of credential dicts (W3C JSON-LD)
+        """
+        if self.conn is None:
+            return []
+        cursor = self.conn.cursor()
+
+        try:
+            cursor.execute('''
+                SELECT credential_json, issued_at, expires_at
+                FROM verifiable_credentials
+                WHERE candidate_id = ?
+                ORDER BY issued_at ASC
+            ''', (candidate_id,))
+            rows = cursor.fetchall()
+            result = []
+            for row in rows:
+                try:
+                    cred = json.loads(row[0])
+                    cred["_issued_at"] = row[1]
+                    cred["_expires_at"] = row[2]
+                    result.append(cred)
+                except Exception:
+                    pass
+            return result
+        except Exception as e:
+            db_logger.error(f"Error fetching credentials: {e}")
+            return []
+
+    # ------------------------------------------------------------------ #
+    # Credential Revocations                                               #
+    # ------------------------------------------------------------------ #
+
+    def save_revocation(self, credential_id: str, reason: str = "Revoked by issuer") -> bool:
+        """
+        Persist a credential revocation so it survives server restarts.
+
+        Args:
+            credential_id: The 'id' field of the credential to revoke
+            reason: Human-readable revocation reason
+
+        Returns:
+            True on success, False on failure.
+        """
+        if self.conn is None:
+            return False
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('''
+                INSERT OR IGNORE INTO credential_revocations (credential_id, reason)
+                VALUES (?, ?)
+            ''', (credential_id, reason))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            db_logger.error(f"Error saving revocation: {e}")
+            return False
+
+    def is_revoked(self, credential_id: str) -> bool:
+        """Check whether a credential has been revoked (reads from SQLite)."""
+        if self.conn is None:
+            return False
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute(
+                'SELECT 1 FROM credential_revocations WHERE credential_id = ?',
+                (credential_id,)
+            )
+            return cursor.fetchone() is not None
+        except Exception:
+            return False
+
+    def load_revoked_credential_ids(self) -> set:
+        """
+        Load all revoked credential IDs from SQLite.
+        Call this on startup to restore the in-memory revocation set.
+
+        Returns:
+            set of revoked credential ID strings
+        """
+        if self.conn is None:
+            return set()
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('SELECT credential_id FROM credential_revocations')
+            return {row[0] for row in cursor.fetchall()}
+        except Exception as e:
+            db_logger.error(f"Error loading revocations: {e}")
+            return set()
 
 
 # Quick test

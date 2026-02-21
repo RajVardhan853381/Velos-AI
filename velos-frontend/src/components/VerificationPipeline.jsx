@@ -164,7 +164,8 @@ WHAT WE OFFER:
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -193,6 +194,7 @@ WHAT WE OFFER:
 
   // Demo simulation (for testing without backend)
   const startDemoAnalysis = () => {
+    if (pipelineState !== 'idle') return; // guard against double-click
     setPipelineState('gatekeeper');
     setTimeout(() => setPipelineState('validator'), 2500);
     setTimeout(() => setPipelineState('inquisitor'), 5000);

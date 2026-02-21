@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, Zap, Shield, Clock, Server, Database, TrendingUp, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Activity, AlertTriangle, Zap, Shield, Clock, Server, Database, TrendingUp, Users, CheckCircle, XCircle, AlertCircle, WifiOff } from 'lucide-react';
 import { injectMockData } from './mockGodModeData';
 import { API_BASE } from '../config.js';
 
@@ -79,19 +79,22 @@ const GodMode = () => {
   const [agents, setAgents] = useState([]);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     // Toggle between real API and mock data for testing
     const USE_MOCK_DATA = false; // Set to true to use mock data for testing
-    
+
     if (USE_MOCK_DATA) {
-      console.log('🧪 Using mock data for God Mode');
+      console.log('Using mock data for God Mode');
       injectMockData(setInsights, setAgents, setHealth, setLoading);
-    } else {
-      fetchGodModeData();
-      const interval = setInterval(fetchGodModeData, 5000);
-      return () => clearInterval(interval);
+      // No interval when using mock data — return empty cleanup
+      return () => {};
     }
+
+    fetchGodModeData();
+    const interval = setInterval(fetchGodModeData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchGodModeData = async () => {
@@ -127,9 +130,17 @@ const GodMode = () => {
         setHealth({ status: 'unknown', uptime: 0, memory_usage: 0 });
       }
 
+      // If all three endpoints failed (null), surface an error
+      if (!insightsRes && !agentsRes && !healthRes) {
+        setFetchError('Unable to reach the server. Showing stale / default data.');
+      } else {
+        setFetchError(null);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch God Mode data:', error);
+      setFetchError('Unable to reach the server. Showing stale / default data.');
       setLoading(false);
     }
   };
@@ -147,6 +158,18 @@ const GodMode = () => {
 
   return (
     <div className="p-0">
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3 mb-6 bg-red-50 border border-red-200 rounded-2xl text-red-700"
+        >
+          <WifiOff size={18} className="flex-shrink-0" />
+          <span className="text-sm font-medium flex-1">{fetchError}</span>
+          <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+        </motion.div>
+      )}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">

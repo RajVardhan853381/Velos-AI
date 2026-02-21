@@ -10,14 +10,14 @@ import {
 // PII category colors
 const getPIICategory = (type) => {
   const categories = {
-    'EMAIL': { color: 'bg-blue-100 border-blue-500/40 text-blue-300', icon: '📧', label: 'Email' },
-    'PHONE': { color: 'bg-green-100 border-green-500/40 text-green-300', icon: '📱', label: 'Phone' },
+    'EMAIL': { color: 'bg-blue-100 border-blue-500/40 text-blue-700', icon: '📧', label: 'Email' },
+    'PHONE': { color: 'bg-green-100 border-green-500/40 text-green-700', icon: '📱', label: 'Phone' },
     'NAME': { color: 'bg-purple-100 border-purple-500/40 text-gray-600', icon: '👤', label: 'Name' },
-    'LOCATION': { color: 'bg-yellow-100 border-yellow-500/40 text-yellow-300', icon: '📍', label: 'Location' },
-    'DATE': { color: 'bg-pink-100 border-pink-500/40 text-pink-300', icon: '📅', label: 'Date' },
+    'LOCATION': { color: 'bg-yellow-100 border-yellow-500/40 text-yellow-700', icon: '📍', label: 'Location' },
+    'DATE': { color: 'bg-pink-100 border-pink-500/40 text-pink-700', icon: '📅', label: 'Date' },
     'SSN': { color: 'bg-red-100 border-red-500/40 text-gray-600', icon: '🔢', label: 'SSN' },
-    'ADDRESS': { color: 'bg-orange-100 border-orange-500/40 text-orange-300', icon: '🏠', label: 'Address' },
-    'OTHER': { color: 'bg-gray-500/20 border-gray-200/60 text-gray-300', icon: '🔒', label: 'Other PII' }
+    'ADDRESS': { color: 'bg-orange-100 border-orange-500/40 text-orange-700', icon: '🏠', label: 'Address' },
+    'OTHER': { color: 'bg-gray-100 border-gray-400/40 text-gray-600', icon: '🔒', label: 'Other PII' }
   };
   
   return categories[type] || categories['OTHER'];
@@ -103,7 +103,7 @@ const DiffLine = ({ line, index }) => {
       <div className="flex items-start gap-3">
         <span className="text-gray-900/30 text-xs mt-1 w-8 flex-shrink-0">{index + 1}</span>
         {icon && <span className={`${iconColor} mt-1 flex-shrink-0`}>{React.createElement(icon, { size: 14 })}</span>}
-        <span className={`flex-1 ${isDeletion ? 'text-gray-600 line-through' : isAddition ? 'text-green-300' : 'text-gray-900/70'}`}>
+        <span className={`flex-1 ${isDeletion ? 'text-gray-600 line-through' : isAddition ? 'text-green-700' : 'text-gray-900/70'}`}>
           {line.text}
         </span>
         {line.pii_type && (
@@ -251,21 +251,25 @@ const ZeroBiasProof = () => {
   const downloadDiffReport = () => {
     if (!diffData) return;
 
-    const report = {
-      candidate_id: diffData.candidate_id,
-      diff_stats: diffData.diff_stats,
-      redaction_stats: diffData.redaction_stats,
-      changes: diffData.diff_report.changes,
-      generated_at: new Date().toISOString()
-    };
+    try {
+      const report = {
+        candidate_id: diffData.candidate_id,
+        diff_stats: diffData.diff_stats,
+        redaction_stats: diffData.redaction_stats,
+        changes: diffData.diff_report?.changes,
+        generated_at: new Date().toISOString()
+      };
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${diffData.candidate_id}_zero_bias_proof.json`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${diffData.candidate_id}_zero_bias_proof.json`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to generate diff report download:', err);
+    }
   };
 
   return (

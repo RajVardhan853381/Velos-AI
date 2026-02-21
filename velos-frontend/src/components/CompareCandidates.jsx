@@ -117,15 +117,15 @@ const CompareCandidates = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/compare`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidate1_id: id1, candidate2_id: id2 })
+      const params = new URLSearchParams({ candidate_a: id1, candidate_b: id2 });
+      const response = await fetch(`${API_BASE}/api/compare?${params}`, {
+        method: 'GET',
       });
 
       if (response.ok) {
         const data = await response.json();
-        setComparison(data);
+        // Backend returns { success, comparison: {...} } — unwrap the comparison object
+        setComparison(data.comparison || data);
       } else if (response.status === 404) {
         setError('One or both candidate IDs not found');
       } else {

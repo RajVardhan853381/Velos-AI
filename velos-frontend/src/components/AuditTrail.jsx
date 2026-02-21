@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, User, Activity, CheckCircle, XCircle, AlertCircle, Filter, Download, Search } from 'lucide-react';
+import { Clock, User, Activity, CheckCircle, XCircle, AlertCircle, Filter, Download, Search, WifiOff } from 'lucide-react';
 import { API_BASE } from '../config.js';
 
 const StatusBadge = ({ status }) => {
@@ -35,6 +35,7 @@ const AuditTrail = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchAuditLogs();
@@ -48,13 +49,16 @@ const AuditTrail = () => {
       if (response.ok) {
         const data = await response.json();
         setAuditLogs(data.audit_logs || []);
+        setFetchError(null);
       } else {
         setAuditLogs([]);
+        setFetchError(`Failed to load audit logs (HTTP ${response.status})`);
       }
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
       setAuditLogs([]);
+      setFetchError('Unable to reach the server. Audit logs unavailable.');
       setLoading(false);
     }
   };
@@ -83,10 +87,23 @@ const AuditTrail = () => {
     a.href = url;
     a.download = `audit-trail-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3 bg-red-50 border border-red-200 rounded-2xl text-red-700"
+        >
+          <WifiOff size={18} className="flex-shrink-0" />
+          <span className="text-sm font-medium flex-1">{fetchError}</span>
+          <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+        </motion.div>
+      )}
       {/* Header with Glassmorphic Design */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

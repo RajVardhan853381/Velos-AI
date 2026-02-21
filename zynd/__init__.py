@@ -1,63 +1,76 @@
 """
 Zynd Protocol Integration Module
-Compatible with official zyndai-agent SDK (v0.1.5)
 
-Implements:
-- IdentityManager - DID document management
-- AgentCommunicationManager - MQTT-based messaging
-- SearchAndDiscoveryManager - Agent discovery by capabilities
-- VerifiableCredential - W3C standard credentials
-- ZyndProtocol - Main interface combining all features
+Uses the official zyndai-agent SDK (v0.2.2) when available (Python 3.12+),
+with a local compatibility shim for older environments.
 
-NOTE: This is a compatibility layer for Python 3.10.
-When running on Python 3.12+, install the official package:
-    pip install zyndai-agent==0.1.5
+Exports:
+- IdentityManager         — real SDK class or local shim
+- AgentCommunicationManager — real SDK class or local shim
+- SearchAndDiscoveryManager — real SDK class or local shim
+- MQTTMessage             — local dataclass (SDK doesn't export it)
+- AgentSearchResponse     — real SDK TypedDict or local TypedDict
+- VerifiableCredential    — local W3C VC implementation
+- ZyndProtocol            — orchestration wrapper
+- zynd_protocol           — singleton instance
+- check_official_sdk_available — returns True if SDK is loaded
+- get_protocol_instance   — returns the singleton
 """
 
 from .protocol import (
     # Identity
     IdentityManager,
-    
+
     # Communication
     AgentCommunicationManager,
     MQTTMessage,
-    
+
     # Discovery
     SearchAndDiscoveryManager,
     AgentSearchResponse,
-    
+
     # Credentials
     VerifiableCredential,
-    
+
     # Main Protocol
     ZyndProtocol,
     zynd_protocol,
-    
+
     # Utility
     check_official_sdk_available,
-    get_protocol_instance
+    get_protocol_instance,
+
+    # SDK status flags
+    _SDK_AVAILABLE,
+    __official_sdk_available__,
+    __version__,
 )
 
 __all__ = [
     # Identity
     'IdentityManager',
-    
+
     # Communication
     'AgentCommunicationManager',
     'MQTTMessage',
-    
+
     # Discovery
     'SearchAndDiscoveryManager',
     'AgentSearchResponse',
-    
+
     # Credentials
     'VerifiableCredential',
-    
+
     # Main Protocol
     'ZyndProtocol',
     'zynd_protocol',
-    
+
     # Utility
     'check_official_sdk_available',
-    'get_protocol_instance'
+    'get_protocol_instance',
+
+    # SDK status
+    '_SDK_AVAILABLE',
+    '__official_sdk_available__',
+    '__version__',
 ]

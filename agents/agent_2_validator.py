@@ -256,7 +256,7 @@ Job Description:
             results = vector_store.get_context_with_scores(
                 query=f"{skill} experience project work",
                 candidate_id=candidate_id,
-                k=3
+                n_results=3
             )
             
             if results:

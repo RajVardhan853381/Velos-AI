@@ -4,9 +4,10 @@ import {
   LayoutDashboard, ShieldCheck, Network, Activity, Eye, 
   Database, Trophy, GitCompare, Zap, Users, Menu, X,
   Sparkles, TrendingUp, CheckCircle2, Cpu, Upload,
-  Search, MessageSquare, ClipboardList, Shield
+  Search, MessageSquare, ClipboardList, Shield, Settings as SettingsIcon
 } from 'lucide-react';
 import { API_BASE } from './config.js';
+import ErrorBoundary from './ErrorBoundary';
 
 // Lazy-loaded components — each chunk loads only when the tab is first visited
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -25,6 +26,7 @@ const AIInterviewer = lazy(() => import('./components/AIInterviewer'));
 const AssessmentGenerator = lazy(() => import('./components/AssessmentGenerator'));
 const AntiCheat = lazy(() => import('./components/AntiCheat'));
 const AuditTrail = lazy(() => import('./components/AuditTrail'));
+const Settings = lazy(() => import('./components/Settings'));
 
 // Static nav & quick-action config — defined outside App to avoid re-creation on render
 const NAV_ITEMS = [
@@ -43,7 +45,8 @@ const NAV_ITEMS = [
   { id: 'batch-upload', label: 'Batch Upload', icon: Upload, badge: null },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, badge: null },
   { id: 'audit', label: 'Audit Trail', icon: Activity, badge: null },
-  { id: 'godmode', label: 'God Mode', icon: Zap, badge: null }
+  { id: 'godmode', label: 'God Mode', icon: Zap, badge: null },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon, badge: null }
 ];
 
 // Animated Background Component
@@ -383,8 +386,6 @@ function App() {
     return () => window.removeEventListener('navigate', handler);
   }, []);
 
-  const navItems = NAV_ITEMS;
-
   const quickActions = [
     {
       icon: Search,
@@ -479,6 +480,8 @@ function App() {
           return <AuditTrail />;
         case 'godmode':
           return <GodMode />;
+        case 'settings':
+          return <Settings />;
         default:
           return <Dashboard />;
       }
@@ -502,12 +505,18 @@ function App() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
           }}
         >
-          <Suspense fallback={fallback}>{content}</Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={fallback}>{content}</Suspense>
+          </ErrorBoundary>
         </div>
       );
     }
     
-    return <Suspense fallback={fallback}>{content}</Suspense>;
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={fallback}>{content}</Suspense>
+      </ErrorBoundary>
+    );
   };
 
   return (
@@ -573,7 +582,7 @@ function App() {
 
             {/* Desktop Navigation — two wrapping rows so all items are always visible */}
             <div className="hidden lg:flex flex-wrap gap-1 pt-3 border-t border-white/30">
-              {navItems.map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <GlassNavItem
                   key={item.id}
                   icon={item.icon}
@@ -602,7 +611,7 @@ function App() {
               }}
             >
               <div className="p-4 space-y-2">
-                {navItems.map((item) => (
+                {NAV_ITEMS.map((item) => (
                   <GlassNavItem
                     key={item.id}
                     icon={item.icon}

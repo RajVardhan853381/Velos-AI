@@ -9,25 +9,29 @@ import { API_BASE } from '../config.js';
 // Safe regex escaping — prevents crash on (, *, +, [ in user input
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Highlight matching text — returns React elements (no innerHTML / no XSS risk)
+const highlightText = (text, searchTerms) => {
+  if (!text) return null;
+  if (!searchTerms || searchTerms.length === 0) return text;
+
+  const pattern = searchTerms
+    .map(t => escapeRegExp(t.trim()))
+    .filter(Boolean)
+    .join('|');
+  if (!pattern) return text;
+
+  const regex = new RegExp(`(${pattern})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part)
+      ? <mark key={i} className="bg-yellow-300/80 text-gray-900 px-1 rounded">{part}</mark>
+      : part
+  );
+};
+
 // Evidence chunk card with highlighting
 const EvidenceChunk = ({ chunk, index, query, highlighted }) => {
   const [expanded, setExpanded] = useState(false);
-
-  // Highlight matching text
-  const highlightText = (text, searchTerms) => {
-    if (!searchTerms || searchTerms.length === 0) return text;
-
-    let highlightedText = text;
-    searchTerms.forEach(term => {
-      const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
-      highlightedText = highlightedText.replace(
-        regex,
-        '<mark class="bg-yellow-300/80 text-gray-900 px-1 rounded">$1</mark>'
-      );
-    });
-
-    return highlightedText;
-  };
 
   const getRelevanceColor = (score) => {
     if (score >= 0.8) return 'from-green-100/60 to-emerald-100/60 border-green-200/60';
@@ -86,12 +90,9 @@ const EvidenceChunk = ({ chunk, index, query, highlighted }) => {
 
       {/* Preview */}
       <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg mb-3">
-        <p
-          className="text-gray-900 text-sm leading-relaxed line-clamp-3"
-          dangerouslySetInnerHTML={{
-            __html: highlightText(chunk.text || chunk.content, query?.split(' ') || [])
-          }}
-        />
+        <p className="text-gray-900 text-sm leading-relaxed line-clamp-3">
+          {highlightText(chunk.text || chunk.content, query?.split(' ') || [])}
+        </p>
       </div>
 
       {/* Metadata */}
@@ -118,12 +119,9 @@ const EvidenceChunk = ({ chunk, index, query, highlighted }) => {
             className="mt-4 pt-4 border-t border-white/10"
           >
             <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <p
-                className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap"
-                dangerouslySetInnerHTML={{
-                  __html: highlightText(chunk.text || chunk.content, query?.split(' ') || [])
-                }}
-              />
+              <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
+                {highlightText(chunk.text || chunk.content, query?.split(' ') || [])}
+              </p>
             </div>
 
             {chunk.metadata && (

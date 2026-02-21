@@ -9,7 +9,9 @@ import {
 import { API_BASE } from '../config.js';
 
 const API = API_BASE;
-const WS = API_BASE.replace(/^http/, 'ws');
+const WS = API_BASE
+  ? API_BASE.replace(/^http/, 'ws')
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 const glass = {
   background: 'rgba(255,255,255,0.35)',
@@ -183,7 +185,9 @@ export default function AntiCheat() {
           } else if (msg.type === 'status') {
             if (msg.faces === 1) setFacesStatus('ok');
           }
-        } catch {}
+        } catch (parseErr) {
+          console.warn('WebSocket message parse error:', parseErr);
+        }
       };
 
       ws.onerror = () => setWsStatus('error');

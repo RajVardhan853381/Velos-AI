@@ -124,15 +124,12 @@ class BatchProcessor:
         try:
             # Step 1: Parse resume to text
             if self.resume_parser:
-                ext = os.path.splitext(filename)[1].lower()
-                parse_result = self.resume_parser.parse_bytes(file_bytes, ext)
-                
-                if not parse_result.get("success"):
+                try:
+                    resume_text, _metadata = self.resume_parser.parse_file(file_bytes, filename)
+                except Exception as parse_err:
                     result["status"] = "PARSE_ERROR"
-                    result["reason"] = parse_result.get("error", "Failed to parse resume")
+                    result["reason"] = str(parse_err)
                     return result
-                
-                resume_text = parse_result.get("text", "")
             else:
                 # Fallback: Try to decode as text
                 try:

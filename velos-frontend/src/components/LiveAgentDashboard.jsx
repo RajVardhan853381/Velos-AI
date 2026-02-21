@@ -386,7 +386,7 @@ const LiveAgentDashboard = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl">
-              <Radio className="text-gray-900 animate-pulse" size={32} />
+              <Radio className="text-white animate-pulse" size={32} />
             </div>
             <div>
               <h1 className="text-5xl font-bold text-gray-900">Live Agent Dashboard</h1>

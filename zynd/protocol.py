@@ -1,24 +1,9 @@
 """
 Zynd Protocol Implementation for Velos
-Compatible wrapper that mirrors the official zyndai-agent API (v0.1.5)
+Uses the official zyndai-agent SDK (v0.2.2) when available (Python 3.12+),
+with a local compatibility fallback for older environments.
 
-This implementation provides:
-1. IdentityManager - DID document management
-2. AgentCommunicationManager - Message handling (simulated without MQTT)
-3. SearchAndDiscoveryManager - Agent discovery by capabilities
-4. Verifiable Credentials - W3C standard format
-
-NOTE: This is a compatibility layer for Python 3.10. 
-The official zyndai-agent package requires Python 3.12+.
-When you upgrade to Python 3.12+, install the official package:
-    pip install zyndai-agent==0.1.5
-
-Official API: https://pypi.org/project/zyndai-agent/
-GitHub: https://github.com/zyndai/zyndai-agent
-
-COMPATIBILITY STATUS:
-✅ Python 3.10.12 - Using compatibility layer
-❌ Python 3.12+ - Can use official SDK
+Official SDK: https://pypi.org/project/zyndai-agent/
 """
 
 import sys
@@ -36,29 +21,62 @@ from dataclasses import dataclass, field
 PYTHON_VERSION = sys.version_info
 SUPPORTS_OFFICIAL_SDK = PYTHON_VERSION >= (3, 12)
 
+# ============ REAL SDK IMPORTS (Python 3.12+) ============
+# Try to import the real zyndai-agent SDK classes.
+# These replace the shim implementations below when available.
+
+_SDK_IDENTITY_MANAGER = None
+_SDK_SEARCH_MANAGER = None
+_SDK_COMM_MANAGER = None
+_SDK_AGENT_SEARCH_RESPONSE = None
+_SDK_AVAILABLE = False
+
+if SUPPORTS_OFFICIAL_SDK:
+    try:
+        from zyndai_agent.identity import IdentityManager as _SdkIdentityManager
+        from zyndai_agent.search import (
+            SearchAndDiscoveryManager as _SdkSearchManager,
+            AgentSearchResponse as _SdkAgentSearchResponse,
+        )
+        from zyndai_agent.communication import AgentCommunicationManager as _SdkCommManager
+        _SDK_IDENTITY_MANAGER = _SdkIdentityManager
+        _SDK_SEARCH_MANAGER = _SdkSearchManager
+        _SDK_COMM_MANAGER = _SdkCommManager
+        _SDK_AGENT_SEARCH_RESPONSE = _SdkAgentSearchResponse
+        _SDK_AVAILABLE = True
+        print(f"✅ zyndai-agent SDK loaded (Python {PYTHON_VERSION.major}.{PYTHON_VERSION.minor}.{PYTHON_VERSION.micro})")
+    except Exception as _sdk_err:
+        print(f"⚠️  zyndai-agent SDK import failed: {_sdk_err} — using compatibility layer")
+
 
 # ============ TYPE DEFINITIONS (matching official SDK) ============
 
-class AgentSearchResponse(TypedDict):
-    """Response from agent search - matches official zyndai_agent.search"""
-    id: str
-    name: str
-    description: str
-    mqttUri: Optional[str]
-    inboxTopic: Optional[str]
-    matchScore: int
-    didIdentifier: str
-    did: dict
+# Use real SDK AgentSearchResponse if available, else local TypedDict
+if _SDK_AVAILABLE and _SDK_AGENT_SEARCH_RESPONSE is not None:
+    AgentSearchResponse = _SDK_AGENT_SEARCH_RESPONSE
+else:
+    class AgentSearchResponse(TypedDict):  # type: ignore[no-redef]
+        """Response from agent search - matches official zyndai_agent.search"""
+        id: str
+        name: str
+        description: str
+        mqttUri: Optional[str]
+        inboxTopic: Optional[str]
+        matchScore: int
+        didIdentifier: str
+        did: dict
 
 
 # ============ IDENTITY MANAGER ============
+# Use real SDK class if available; otherwise fall back to local shim.
 
-class IdentityManager:
-    """
-    Manages identity verification for ZyndAI agents.
-    Mirrors zyndai_agent.identity.IdentityManager API.
-    
-    In production (Python 3.12+), replace with:
+if _SDK_AVAILABLE and _SDK_IDENTITY_MANAGER is not None:
+    IdentityManager = _SDK_IDENTITY_MANAGER
+else:
+    class IdentityManager:  # type: ignore[no-redef]
+        """
+        Local shim — used only when zyndai-agent SDK is unavailable.
+        In production (Python 3.12+), replace with:
         from zyndai_agent.identity import IdentityManager
     """
     
@@ -177,6 +195,7 @@ class IdentityManager:
 
 
 # ============ COMMUNICATION MANAGER ============
+# MQTTMessage is always our local dataclass (SDK doesn't export it publicly)
 
 @dataclass
 class MQTTMessage:
@@ -227,14 +246,16 @@ class MQTTMessage:
         )
 
 
-class AgentCommunicationManager:
-    """
-    MQTT-based communication manager for agents.
-    Mirrors zyndai_agent.communication.AgentCommunicationManager
-    
-    NOTE: This is a simulation for Python 3.10 compatibility.
-    In production (Python 3.12+), this connects to real MQTT broker.
-    """
+# Use real SDK AgentCommunicationManager if available, else local shim.
+if _SDK_AVAILABLE and _SDK_COMM_MANAGER is not None:
+    AgentCommunicationManager = _SDK_COMM_MANAGER
+else:
+    class AgentCommunicationManager:  # type: ignore[no-redef]
+        """
+        MQTT-based communication manager for agents.
+        Local shim — mirrors zyndai_agent.communication.AgentCommunicationManager.
+        Used only when zyndai-agent SDK is unavailable.
+        """
     
     def __init__(
         self,
@@ -352,12 +373,17 @@ class AgentCommunicationManager:
 
 
 # ============ SEARCH AND DISCOVERY ============
+# Use real SDK SearchAndDiscoveryManager if available, else local shim.
 
-class SearchAndDiscoveryManager:
-    """
-    Agent discovery protocol.
-    Mirrors zyndai_agent.search.SearchAndDiscoveryManager
-    """
+if _SDK_AVAILABLE and _SDK_SEARCH_MANAGER is not None:
+    SearchAndDiscoveryManager = _SDK_SEARCH_MANAGER
+else:
+    class SearchAndDiscoveryManager:  # type: ignore[no-redef]
+        """
+        Agent discovery protocol.
+        Local shim — mirrors zyndai_agent.search.SearchAndDiscoveryManager.
+        Used only when zyndai-agent SDK is unavailable.
+        """
     
     def __init__(self, registry_url: str = "http://localhost:3002"):
         self.registry_url = registry_url
@@ -741,43 +767,25 @@ class ZyndProtocol:
 
 def check_official_sdk_available() -> bool:
     """Check if the official zyndai-agent SDK is available."""
-    if not SUPPORTS_OFFICIAL_SDK:
-        return False
-    try:
-        import zyndai_agent  # type: ignore[import-not-found]
-        return True
-    except ImportError:
-        return False
+    return _SDK_AVAILABLE
 
 
 def get_protocol_instance():
     """
-    Get the appropriate protocol instance.
-    Uses official SDK on Python 3.12+, falls back to compatible implementation.
-    
+    Get the Zynd Protocol instance.
+    When _SDK_AVAILABLE is True, the ZyndProtocol wraps real SDK classes
+    (IdentityManager, SearchAndDiscoveryManager, AgentCommunicationManager).
+    Otherwise it uses the local shim implementations.
+
     Returns:
-        ZyndProtocol instance (compatibility layer or official SDK wrapper)
+        ZyndProtocol singleton
     """
     python_ver = f"{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}.{PYTHON_VERSION.micro}"
-    
-    if check_official_sdk_available():
-        print(f"✅ Using official zyndai-agent SDK (Python {python_ver})")
-        try:
-            from zyndai_agent.agent import ZyndAIAgent, AgentConfig  # type: ignore[import-not-found]
-            # Wrap official SDK to match our API
-            return zynd_protocol  # Use our wrapper for now
-        except Exception as e:
-            print(f"⚠️ Official SDK import failed: {e}")
-            print(f"ℹ️ Falling back to compatibility layer")
-            return zynd_protocol
+    if _SDK_AVAILABLE:
+        print(f"[Zynd] Using real zyndai-agent SDK classes (Python {python_ver})")
     else:
-        if SUPPORTS_OFFICIAL_SDK:
-            print(f"ℹ️ Python {python_ver} supports official SDK, but package not installed")
-            print(f"   Install with: pip install zyndai-agent>=0.1.5")
-        else:
-            print(f"ℹ️ Using Zynd Protocol compatibility layer (Python {python_ver})")
-            print(f"   Official SDK requires Python 3.12+ (you have {python_ver})")
-        return zynd_protocol
+        print(f"[Zynd] Using compatibility shim classes (Python {python_ver})")
+    return zynd_protocol
 
 
 # ============ GLOBAL INSTANCE ============
@@ -786,9 +794,9 @@ def get_protocol_instance():
 zynd_protocol = ZyndProtocol()
 
 # Export SDK compatibility status
-__version__ = "0.1.5-compat"
+__version__ = "0.2.2-sdk" if _SDK_AVAILABLE else "0.1.5-compat"
 __python_version__ = f"{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}.{PYTHON_VERSION.micro}"
-__official_sdk_available__ = check_official_sdk_available()
+__official_sdk_available__ = _SDK_AVAILABLE
 __supports_official_sdk__ = SUPPORTS_OFFICIAL_SDK
 
 

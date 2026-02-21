@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Award, TrendingUp, Filter, Users, Star, Target } from 'lucide-react';
+import { Trophy, Medal, Award, TrendingUp, Filter, Users, Star, Target, WifiOff } from 'lucide-react';
 import { API_BASE } from '../config.js';
 
 const LeaderboardEntry = ({ candidate, rank, index }) => {
@@ -88,6 +88,7 @@ const Leaderboard = () => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [minScore, setMinScore] = useState(0);
   const [statusFilter, setStatusFilter] = useState('passed');
 
@@ -102,20 +103,24 @@ const Leaderboard = () => {
       const response = await fetch(`${API_BASE}/api/leaderboard`);
       if (response.ok) {
         const data = await response.json();
-        setCandidates(data.data || []);
+        setCandidates(data.data?.leaderboard || []);
         setUnavailable(false);
+        setFetchError(null);
       } else if (response.status === 503) {
         setCandidates([]);
         setUnavailable(true);
+        setFetchError(null);
         console.info('Leaderboard requires batch analytics — process candidates via Batch Upload first.');
       } else {
         setCandidates([]);
         setUnavailable(false);
+        setFetchError(`Failed to load leaderboard (HTTP ${response.status})`);
       }
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error);
       setCandidates([]);
+      setFetchError('Unable to reach the server. Leaderboard unavailable.');
       setLoading(false);
     }
   };
@@ -142,6 +147,18 @@ const Leaderboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3 bg-red-50 border border-red-200 rounded-2xl text-red-700"
+        >
+          <WifiOff size={18} className="flex-shrink-0" />
+          <span className="text-sm font-medium flex-1">{fetchError}</span>
+          <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+        </motion.div>
+      )}
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { motion } from 'framer-motion';
-import { Users, Shield, AlertTriangle, TrendingUp, Activity, Award, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Shield, AlertTriangle, TrendingUp, Activity, Award, CheckCircle, XCircle, WifiOff } from 'lucide-react';
 import { API_BASE } from '../config.js';
 
 const StatCard = ({ title, value, subtext, icon: Icon, gradient, delay, trend }) => (
@@ -39,6 +39,8 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -47,6 +49,8 @@ const Dashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
       const [statsRes, chartRes, auditRes] = await Promise.all([
         fetch(`${API_BASE}/api/stats`).catch(() => null),
@@ -57,12 +61,14 @@ const Dashboard = () => {
       if (statsRes && statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
+        setFetchError(null);
       } else {
         setStats({
           total_candidates: 0,
           approved_total: 0,
           fraud_detected: 0,
         });
+        if (!statsRes) setFetchError('Unable to reach the server. Dashboard data may be stale.');
       }
 
       if (chartRes && chartRes.ok) {
@@ -119,12 +125,15 @@ const Dashboard = () => {
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
+      setFetchError('Unable to reach the server. Dashboard data may be stale.');
       setStats({
           total_candidates: 0,
           approved_total: 0,
           fraud_detected: 0,
         });
       setLoading(false);
+    } finally {
+      fetchingRef.current = false;
     }
   };
 
@@ -136,6 +145,18 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-5 py-3 bg-red-50 border border-red-200 rounded-2xl text-red-700"
+        >
+          <WifiOff size={18} className="flex-shrink-0" />
+          <span className="text-sm font-medium flex-1">{fetchError}</span>
+          <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-600 transition-colors text-lg leading-none">&times;</button>
+        </motion.div>
+      )}
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
