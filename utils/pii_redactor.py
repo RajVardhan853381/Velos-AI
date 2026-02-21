@@ -210,11 +210,16 @@ class PIIRedactor:
             'agile', 'scrum', 'jira'
         ]
         
-        # Find skills in text
+        # Find skills in text using word boundaries
         skills_found = []
-        text_lower = text.lower()
         for skill in skills_keywords:
-            if skill.lower() in text_lower:
+            escaped_skill = re.escape(skill)
+            # Use \b boundaries for alphanumeric skills, allow symbol limits for C++
+            if re.match(r'^\w+$', skill):
+                pattern = r'\b' + escaped_skill + r'\b'
+            else:
+                pattern = r'(?:\b|\s)' + escaped_skill + r'(?:\b|\s)'
+            if re.search(pattern, text, re.IGNORECASE):
                 skills_found.append(skill)
         
         # Extract projects (look for common patterns)

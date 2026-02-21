@@ -19,3 +19,16 @@ services:
       - key: ETHEREUM_PRIVATE_KEY
         sync: false
     autoDeploy: true
+
+  - type: web
+    name: velos-frontend
+    env: docker
+    region: ohio
+    plan: free
+    branch: main
+    dockerContext: .
+    dockerfilePath: Dockerfile.frontend
+    envVars:
+      - key: VITE_API_BASE
+        value: "https://velos-backend.onrender.com"
+    autoDeploy: true

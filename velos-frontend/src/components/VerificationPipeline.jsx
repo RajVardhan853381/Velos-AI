@@ -169,18 +169,18 @@ WHAT WE OFFER:
       }
 
       const data = await response.json();
-      
+
       // Animate through stages based on real data
       if (data.stages?.gatekeeper) {
         setPipelineState('validator');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
-      
+
       if (data.stages?.validator) {
         setPipelineState('inquisitor');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
-      
+
       // Always transition to done after animations complete
       setPipelineState('done');
       setResult(data);
@@ -224,10 +224,10 @@ WHAT WE OFFER:
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      
+
       {/* 1. Control Panel / Upload Area */}
       {pipelineState === 'idle' ? (
-        <motion.div 
+        <motion.div
           layout
           className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 backdrop-blur-xl border border-emerald-100/50 rounded-3xl p-8 shadow-lg"
         >
@@ -237,7 +237,7 @@ WHAT WE OFFER:
                 <Upload size={32} />
               </div>
               <h2 className="text-2xl font-bold text-slate-800">Initiate Verification</h2>
-              <p className="text-slate-600 mt-2">Enter candidate details to begin 3-Agent Analysis</p>
+              <p className="text-slate-600 mt-2">Enter candidate details to begin 3 AI Agents Analysis</p>
             </div>
 
             {/* Quick Actions */}
@@ -306,7 +306,7 @@ WHAT WE OFFER:
 
             {/* Error Message */}
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl text-red-700"
@@ -370,7 +370,7 @@ WHAT WE OFFER:
       {/* 3. Enhanced Results Panel (Only shows when done) */}
       <AnimatePresence>
         {pipelineState === 'done' && result && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -382,11 +382,10 @@ WHAT WE OFFER:
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className={`relative overflow-hidden rounded-3xl p-8 shadow-2xl ${
-                result.status === 'passed' 
-                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500'
-                  : 'bg-gradient-to-r from-red-500 via-rose-500 to-pink-500'
-              }`}
+              className={`relative overflow-hidden rounded-3xl p-8 shadow-2xl ${result.status === 'passed'
+                ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500'
+                : 'bg-gradient-to-r from-red-500 via-rose-500 to-pink-500'
+                }`}
             >
               <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
               <div className="relative flex items-center justify-between">
@@ -527,9 +526,9 @@ WHAT WE OFFER:
             >
               <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                 <Sparkles className="text-violet-500" size={28} />
-                3-Agent Verification Breakdown
+                3 AI Agents Verification Breakdown
               </h3>
-              
+
               <div className="space-y-4">
                 {/* Gatekeeper */}
                 <motion.div
@@ -548,11 +547,10 @@ WHAT WE OFFER:
                         <p className="text-xs text-gray-500">PII Removal & Anonymization</p>
                       </div>
                     </div>
-                    <span className={`px-4 py-2 rounded-lg font-semibold ${
-                      result.stages?.gatekeeper?.status === 'passed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`px-4 py-2 rounded-lg font-semibold ${result.stages?.gatekeeper?.status === 'passed'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}>
                       {result.stages?.gatekeeper?.status === 'passed' ? '✓ Passed' : '✗ Failed'}
                     </span>
                   </div>
@@ -579,11 +577,10 @@ WHAT WE OFFER:
                         <p className="text-xs text-gray-500">Skill Matching & Verification</p>
                       </div>
                     </div>
-                    <span className={`px-4 py-2 rounded-lg font-semibold ${
-                      result.stages?.validator?.status === 'passed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`px-4 py-2 rounded-lg font-semibold ${result.stages?.validator?.status === 'passed'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}>
                       {result.stages?.validator?.status === 'passed' ? '✓ Passed' : '✗ Failed'}
                     </span>
                   </div>
@@ -616,11 +613,10 @@ WHAT WE OFFER:
                         <p className="text-xs text-gray-500">Fraud Detection & Deep Analysis</p>
                       </div>
                     </div>
-                    <span className={`px-4 py-2 rounded-lg font-semibold ${
-                      result.stages?.inquisitor?.status === 'passed'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`px-4 py-2 rounded-lg font-semibold ${result.stages?.inquisitor?.status === 'passed'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}>
                       {result.stages?.inquisitor?.status === 'passed' ? '✓ Passed' : '✗ Failed'}
                     </span>
                   </div>

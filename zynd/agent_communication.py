@@ -359,9 +359,27 @@ class AgentCommunicationHub:
         Returns:
             Dict with sent and received messages
         """
+        sent_dicts = []
+        for msg in self.sent_messages[-limit:]:
+            if hasattr(msg, "to_dict"):
+                sent_dicts.append(msg.to_dict())
+            elif isinstance(msg, dict):
+                sent_dicts.append(msg)
+            else:
+                sent_dicts.append({"message": str(msg)})
+                
+        recv_dicts = []
+        for msg in self.received_messages[-limit:]:
+            if hasattr(msg, "to_dict"):
+                recv_dicts.append(msg.to_dict())
+            elif isinstance(msg, dict):
+                recv_dicts.append(msg)
+            else:
+                recv_dicts.append({"message": str(msg)})
+                
         return {
-            "sent": [msg.to_dict() for msg in self.sent_messages[-limit:]],
-            "received": [msg.to_dict() for msg in self.received_messages[-limit:]]
+            "sent": sent_dicts,
+            "received": recv_dicts
         }
     
     def _generate_message_id(self) -> str:

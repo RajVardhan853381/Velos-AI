@@ -75,16 +75,34 @@ export default function AntiCheat() {
   const intervalRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Detect tab visibility changes
+  // Detect tab visibility or focus changes
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (step === 'proctoring' && document.hidden) {
+    let timeoutId;
+    const triggerAlert = () => {
+      if (step !== 'proctoring') return;
+
+      // Debounce to prevent double-counting if both blur and visibilitychange fire
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
         setTabSwitches(prev => prev + 1);
-        wsRef.current?.send(JSON.stringify({ type: 'tab_switch' }));
-      }
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: 'tab_switch' }));
+        }
+      }, 500);
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+    const handleVisibility = () => {
+      if (document.hidden || document.visibilityState === 'hidden') triggerAlert();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('blur', triggerAlert);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('blur', triggerAlert);
+    };
   }, [step]);
 
   // Elapsed timer
@@ -118,8 +136,8 @@ export default function AntiCheat() {
       const msg = err.name === 'NotAllowedError'
         ? 'Camera permission denied. Please allow camera access in your browser settings.'
         : err.name === 'NotFoundError'
-        ? 'No camera found. Connect a camera and try again.'
-        : `Camera error: ${err.message}`;
+          ? 'No camera found. Connect a camera and try again.'
+          : `Camera error: ${err.message}`;
       setCameraError(`${msg} Tab-switch detection will still work.`);
     }
   };
@@ -275,11 +293,10 @@ export default function AntiCheat() {
             )}
             <button
               onClick={cameraOn ? stopCamera : startCamera}
-              className={`mt-2 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                cameraOn
+              className={`mt-2 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${cameraOn
                   ? 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
                   : 'bg-white/60 text-gray-700 border border-white/80 hover:bg-white/80'
-              }`}
+                }`}
             >
               {cameraOn ? <><CameraOff size={15} /> Stop Camera</> : <><Camera size={15} /> Start Camera</>}
             </button>

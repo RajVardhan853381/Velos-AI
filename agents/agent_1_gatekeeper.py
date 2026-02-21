@@ -227,7 +227,7 @@ class BlindGatekeeper:
         audit_entry["pii_redacted"] = True
         
         # ============ STEP 5: Extract Clean Data ============
-        clean_data = self.extract_clean_data(redacted_text)
+        clean_data = self.extract_clean_data(raw_resume_text)
         audit_entry["clean_data_extracted"] = {
             "skills_count": len(clean_data["skills"]),
             "projects_count": len(clean_data["projects"])

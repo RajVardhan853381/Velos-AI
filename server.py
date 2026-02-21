@@ -568,7 +568,8 @@ async def verify_candidate(request: Request, verify_req: VerifyRequest):
                 None,
                 lambda: orchestrator.run_verification_pipeline(
                     verify_req.resume_text,
-                    verify_req.job_description
+                    verify_req.job_description,
+                    min_years=0.0  # Default to 0 to allow Agent 2 to run for junior roles
                 )
             )
             

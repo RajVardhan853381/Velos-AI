@@ -40,7 +40,7 @@ const NAV_ITEMS = [
   { id: 'anti-cheat', label: 'Anti-Cheat', icon: Shield, badge: 'New' },
   { id: 'candidates', label: 'Candidates', icon: Users, badge: null },
   { id: 'blockchain', label: 'Blockchain', icon: Network, badge: null },
-  { id: 'live-agents', label: 'Live Agents', icon: Activity, badge: '3' },
+  { id: 'live-agents', label: 'Live Agents', icon: Activity, badge: '3 AI Agents' },
   { id: 'evidence', label: 'Evidence', icon: Database, badge: null },
   { id: 'bias-proof', label: 'Zero Bias', icon: Eye, badge: null },
   { id: 'compare', label: 'Compare', icon: GitCompare, badge: null },
@@ -503,7 +503,10 @@ function App() {
     );
 
     // Wrap content in glass container for non-dashboard tabs
-    if (activeTab !== 'dashboard') {
+    const noGlassTabs = ['dashboard', 'agent-flow', 'godmode', 'leaderboard'];
+
+    // Wrap content in glass container for most tabs
+    if (!noGlassTabs.includes(activeTab)) {
       return (
         <div
           className="rounded-3xl p-8"

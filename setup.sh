@@ -44,7 +44,7 @@ fi
 # Create Python virtual environment
 echo -e "${YELLOW}[3/8] Creating Python virtual environment...${NC}"
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    virtualenv venv
     echo -e "${GREEN}✓ Virtual environment created${NC}"
 else
     echo -e "${GREEN}✓ Virtual environment already exists${NC}"

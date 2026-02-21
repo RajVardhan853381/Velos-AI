@@ -20,6 +20,8 @@ class AuditLog:
     """
     
     def __init__(self, db_path: str = "velos_audit.db"):
+        import threading
+        self._lock = threading.Lock()
         self.db_path = db_path
         self.conn: Optional[sqlite3.Connection] = None
         self._connect()
@@ -143,27 +145,27 @@ class AuditLog:
         """Create or get candidate record"""
         if self.conn is None:
             return -1
-        cursor = self.conn.cursor()
         
-        try:
-            cursor.execute('''
-                INSERT INTO candidates (candidate_id, status)
-                VALUES (?, ?)
-                ON CONFLICT(candidate_id) DO UPDATE SET
-                    updated_at = CURRENT_TIMESTAMP
-            ''', (candidate_id, initial_status))
-            self.conn.commit()
-            return cursor.lastrowid or -1
-        except Exception as e:
-            db_logger.error(f"Error saving candidate: {e}")
-            return -1
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute('''
+                    INSERT INTO candidates (candidate_id, status)
+                    VALUES (?, ?)
+                    ON CONFLICT(candidate_id) DO UPDATE SET
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (candidate_id, initial_status))
+                self.conn.commit()
+                return cursor.lastrowid or -1
+            except Exception as e:
+                db_logger.error(f"Error saving candidate: {e}")
+                return -1
     
     def update_candidate(self, candidate_id: str, updates: Dict) -> bool:
         """Update candidate record with new data"""
         if self.conn is None:
             return False
-        cursor = self.conn.cursor()
-        
+            
         allowed_fields = ['status', 'years_exp', 'match_score', 
                          'authenticity_score', 'final_decision']
         
@@ -181,116 +183,122 @@ class AuditLog:
         set_clauses.append("updated_at = CURRENT_TIMESTAMP")
         values.append(candidate_id)
         
-        try:
-            cursor.execute(f'''
-                UPDATE candidates 
-                SET {', '.join(set_clauses)}
-                WHERE candidate_id = ?
-            ''', values)
-            self.conn.commit()
-            return True
-        except Exception as e:
-            db_logger.error(f"Error updating candidate: {e}")
-            return False
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute(f'''
+                    UPDATE candidates 
+                    SET {', '.join(set_clauses)}
+                    WHERE candidate_id = ?
+                ''', values)
+                self.conn.commit()
+                return True
+            except Exception as e:
+                db_logger.error(f"Error updating candidate: {e}")
+                return False
     
     def save_audit_entry(self, candidate_id: str, audit_entry: Dict) -> int:
         """Save individual agent audit log entry"""
         if self.conn is None:
             return -1
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT INTO audit_trail 
-                (candidate_id, agent_name, action, decision, timestamp, details)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (
-                candidate_id,
-                audit_entry.get('agent', 'UNKNOWN'),
-                audit_entry.get('action', ''),
-                audit_entry.get('decision', ''),
-                audit_entry.get('timestamp', datetime.now().isoformat()),
-                json.dumps(audit_entry)
-            ))
-            self.conn.commit()
-            return cursor.lastrowid or -1
-        except Exception as e:
-            db_logger.error(f"Error saving audit entry: {e}")
-            return -1
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute('''
+                    INSERT INTO audit_trail 
+                    (candidate_id, agent_name, action, decision, timestamp, details)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    candidate_id,
+                    audit_entry.get('agent', 'UNKNOWN'),
+                    audit_entry.get('action', ''),
+                    audit_entry.get('decision', ''),
+                    audit_entry.get('timestamp', datetime.now().isoformat()),
+                    json.dumps(audit_entry)
+                ))
+                self.conn.commit()
+                return cursor.lastrowid or -1
+            except Exception as e:
+                db_logger.error(f"Error saving audit entry: {e}")
+                return -1
     
     def save_verification_result(self, candidate_id: str, result: Dict) -> int:
         """Save complete verification pipeline result"""
         if self.conn is None:
             return -1
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT INTO verification_results 
-                (candidate_id, agent_1_status, agent_1_reason, agent_1_years,
-                 agent_2_status, agent_2_score, agent_2_reason,
-                 agent_3_status, agent_3_authenticity, agent_3_reason,
-                 final_status, final_reason)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                candidate_id,
-                result.get('agent_1_status', ''),
-                result.get('agent_1_reason', ''),
-                result.get('years_exp', 0),
-                result.get('agent_2_status', ''),
-                result.get('agent_2_score', 0),
-                result.get('agent_2_reason', ''),
-                result.get('agent_3_status', ''),
-                result.get('agent_3_authenticity', 0),
-                result.get('agent_3_reason', ''),
-                result.get('final_status', ''),
-                result.get('final_reason', '')
-            ))
-            self.conn.commit()
-            return cursor.lastrowid or -1
-        except Exception as e:
-            db_logger.error(f"Error saving verification result: {e}")
-            return -1
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute('''
+                    INSERT INTO verification_results 
+                    (candidate_id, agent_1_status, agent_1_reason, agent_1_years,
+                     agent_2_status, agent_2_score, agent_2_reason,
+                     agent_3_status, agent_3_authenticity, agent_3_reason,
+                     final_status, final_reason)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    candidate_id,
+                    result.get('agent_1_status', ''),
+                    result.get('agent_1_reason', ''),
+                    result.get('years_exp', 0),
+                    result.get('agent_2_status', ''),
+                    result.get('agent_2_score', 0),
+                    result.get('agent_2_reason', ''),
+                    result.get('agent_3_status', ''),
+                    result.get('agent_3_authenticity', 0),
+                    result.get('agent_3_reason', ''),
+                    result.get('final_status', ''),
+                    result.get('final_reason', '')
+                ))
+                self.conn.commit()
+                return cursor.lastrowid or -1
+            except Exception as e:
+                db_logger.error(f"Error saving verification result: {e}")
+                return -1
     
     def save_bias_flag(self, candidate_id: str, bias_type: str, 
                        description: str, action: str = "Redacted") -> int:
         """Record detected bias indicator"""
         if self.conn is None:
             return -1
-        cursor = self.conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT INTO bias_flags 
-                (candidate_id, bias_type, description, action_taken)
-                VALUES (?, ?, ?, ?)
-            ''', (candidate_id, bias_type, description, action))
-            self.conn.commit()
-            return cursor.lastrowid or -1
-        except Exception as e:
-            db_logger.error(f"Error saving bias flag: {e}")
-            return -1
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute('''
+                    INSERT INTO bias_flags 
+                    (candidate_id, bias_type, description, action_taken)
+                    VALUES (?, ?, ?, ?)
+                ''', (candidate_id, bias_type, description, action))
+                self.conn.commit()
+                return cursor.lastrowid or -1
+            except Exception as e:
+                db_logger.error(f"Error saving bias flag: {e}")
+                return -1
     
     def save_pii_redactions(self, candidate_id: str, 
                             redaction_stats: Dict[str, int]) -> bool:
         """Record PII redaction statistics"""
         if self.conn is None:
             return False
-        cursor = self.conn.cursor()
-        
-        try:
-            for redaction_type, count in redaction_stats.items():
-                if count > 0:
-                    cursor.execute('''
-                        INSERT INTO pii_redactions 
-                        (candidate_id, redaction_type, count)
-                        VALUES (?, ?, ?)
-                    ''', (candidate_id, redaction_type, count))
-            self.conn.commit()
-            return True
-        except Exception as e:
-            db_logger.error(f"Error saving PII redactions: {e}")
-            return False
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                for redaction_type, count in redaction_stats.items():
+                    if count > 0:
+                        cursor.execute('''
+                            INSERT INTO pii_redactions 
+                            (candidate_id, redaction_type, count)
+                            VALUES (?, ?, ?)
+                        ''', (candidate_id, redaction_type, count))
+                self.conn.commit()
+                return True
+            except Exception as e:
+                db_logger.error(f"Error saving PII redactions: {e}")
+                return False
     
     def get_candidate(self, candidate_id: str) -> Optional[Dict]:
         """Get candidate record"""
@@ -455,36 +463,37 @@ class AuditLog:
         """
         if self.conn is None:
             return -1
-        cursor = self.conn.cursor()
-
-        credential_id = credential.get("id", "")
-        credential_type = (credential.get("type") or ["VerifiableCredential"])[-1]
-        issuer = credential.get("issuer", "")
-        if isinstance(issuer, dict):
-            issuer = issuer.get("id", str(issuer))
-        subject = credential.get("credentialSubject", {}).get("id", "")
-        expires_at = credential.get("expirationDate")
-
-        try:
-            cursor.execute('''
-                INSERT OR REPLACE INTO verifiable_credentials
-                (credential_id, candidate_id, credential_type, issuer_did,
-                 subject_did, credential_json, expires_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                credential_id,
-                candidate_id,
-                credential_type,
-                issuer,
-                subject,
-                json.dumps(credential),
-                expires_at,
-            ))
-            self.conn.commit()
-            return cursor.lastrowid or -1
-        except Exception as e:
-            db_logger.error(f"Error saving credential: {e}")
-            return -1
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                credential_id = credential.get("id", "")
+                credential_type = (credential.get("type") or ["VerifiableCredential"])[-1]
+                issuer = credential.get("issuer", "")
+                if isinstance(issuer, dict):
+                    issuer = issuer.get("id", str(issuer))
+                subject = credential.get("credentialSubject", {}).get("id", "")
+                expires_at = credential.get("expirationDate")
+                
+                cursor.execute('''
+                    INSERT OR REPLACE INTO verifiable_credentials
+                    (credential_id, candidate_id, credential_type, issuer_did,
+                     subject_did, credential_json, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    credential_id,
+                    candidate_id,
+                    credential_type,
+                    issuer,
+                    subject,
+                    json.dumps(credential),
+                    expires_at,
+                ))
+                self.conn.commit()
+                return cursor.lastrowid or -1
+            except Exception as e:
+                db_logger.error(f"Error saving credential: {e}")
+                return -1
 
     def get_credentials_for_candidate(self, candidate_id: str) -> List[Dict]:
         """
@@ -539,17 +548,19 @@ class AuditLog:
         """
         if self.conn is None:
             return False
-        cursor = self.conn.cursor()
-        try:
-            cursor.execute('''
-                INSERT OR IGNORE INTO credential_revocations (credential_id, reason)
-                VALUES (?, ?)
-            ''', (credential_id, reason))
-            self.conn.commit()
-            return True
-        except Exception as e:
-            db_logger.error(f"Error saving revocation: {e}")
-            return False
+            
+        with self._lock:
+            try:
+                cursor = self.conn.cursor()
+                cursor.execute('''
+                    INSERT OR IGNORE INTO credential_revocations (credential_id, reason)
+                    VALUES (?, ?)
+                ''', (credential_id, reason))
+                self.conn.commit()
+                return True
+            except Exception as e:
+                db_logger.error(f"Error saving revocation: {e}")
+                return False
 
     def is_revoked(self, credential_id: str) -> bool:
         """Check whether a credential has been revoked (reads from SQLite)."""
