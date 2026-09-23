@@ -6,6 +6,7 @@ authors = ["Raj <raj@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
+httpx = "^0.26.0"
 pytest = "^8.0.0"
 pytest-asyncio = "^0.23.0"
 ruff = "^0.7.0"
