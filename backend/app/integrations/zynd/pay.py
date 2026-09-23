@@ -16,14 +16,6 @@ class ZyndPayService:
         """
         Creates an invoice for a candidate to pay for a premium, verified credential.
         """
-        payload = {
-            "payer_did": candidate_did,
-            "amount_usd": amount_usd,
-            "currency": "USDC", # Example stablecoin
-            "description": "Velos Premium Validated Skill Credential",
-            "webhook_url": "https://api.velos.com/v1/webhooks/zynd-pay" # Phase 13 webhook integration
-        }
-        
         logger.info(f"Generating Zynd Pay invoice for {amount_usd} USD for DID {candidate_did[:10]}")
         
         # Mocking Zynd API

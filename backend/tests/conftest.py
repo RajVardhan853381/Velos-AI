@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
-from app.main import create_app
-from app.models.database import Base
+from backend.app.main import create_app
+from backend.app.models.database import Base
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 # In-memory SQLite for extremely fast, $0 cost test isolation

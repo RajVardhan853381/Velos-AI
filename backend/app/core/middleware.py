@@ -1,6 +1,7 @@
 import uuid
 import time
 from fastapi import Request
+from backend.app.core.security import decode_token
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
@@ -19,9 +20,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         response.headers["X-Process-Time"] = str(process_time)
         return response
 
-from backend.app.core.security import decode_token
-
 class AuthMiddleware(BaseHTTPMiddleware):
+
     async def dispatch(self, request: Request, call_next):
         # Determine if path needs auth based on a simple check or globally
         auth_header = request.headers.get("Authorization")

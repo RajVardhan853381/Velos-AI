@@ -21,14 +21,6 @@ class ZyndSearchService:
         """
         Reverse searches the Zynd network for published, verified candidates matching criteria.
         """
-        params = {
-            "skills": ",".join(required_skills),
-            "trust_score_min": min_trust_score,
-            "match_score_min": min_match_score,
-            "credential_type": "SkillAssessment",
-            "limit": limit
-        }
-        
         logger.info(f"Searching Zynd for talent with skills: {required_skills}")
         
         # Mocking API Call
