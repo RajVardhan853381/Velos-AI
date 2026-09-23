@@ -1,7 +1,5 @@
-import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from datetime import datetime
 from typing import Any
 from backend.app.config import settings
 

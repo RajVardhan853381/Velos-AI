@@ -1,6 +1,4 @@
-from typing import Optional
 from fastapi import Request, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.models.database import Base
 
 class TenantRepository:

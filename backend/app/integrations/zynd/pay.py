@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from .client import ZyndClient, get_zynd_client
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from .client import ZyndClient, get_zynd_client
 
 logger = logging.getLogger(__name__)
