@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from .client import ZyndClient, get_zynd_client
 
 logger = logging.getLogger(__name__)
@@ -21,14 +21,6 @@ class ZyndSearchService:
         """
         Reverse searches the Zynd network for published, verified candidates matching criteria.
         """
-        params = {
-            "skills": ",".join(required_skills),
-            "trust_score_min": min_trust_score,
-            "match_score_min": min_match_score,
-            "credential_type": "SkillAssessment",
-            "limit": limit
-        }
-        
         logger.info(f"Searching Zynd for talent with skills: {required_skills}")
         
         # Mocking API Call
@@ -36,15 +28,15 @@ class ZyndSearchService:
         # return response["results"]
         
         # Mock hackathon data
-        import random
+        import secrets
         results = []
-        for i in range(random.randint(2, min(limit, 5))):
+        for i in range((2 + secrets.randbelow(min(limit, 5) - 2 + 1))):
             results.append({
-                "zynd_did": f"did:zynd:candidate-{random.randint(1000, 9999)}",
-                "verified_skills": required_skills + ["SQL", "Docker"][:random.randint(0,2)],
-                "trust_score": random.uniform(min_trust_score, 99.9),
-                "match_score": random.uniform(min_match_score, 99.9),
-                "credential_uri": f"zynd://credential/{random.randint(10000, 99999)}"
+                "zynd_did": f"did:zynd:candidate-{(1000 + secrets.randbelow(9999 - 1000 + 1))}",
+                "verified_skills": required_skills + ["SQL", "Docker"][:(0 + secrets.randbelow(2 - 0 + 1))],
+                "trust_score": (min_trust_score + secrets.randbelow(int((99.9 - min_trust_score) * 100)) / 100.0),
+                "match_score": (min_match_score + secrets.randbelow(int((99.9 - min_match_score) * 100)) / 100.0),
+                "credential_uri": f"zynd://credential/{(10000 + secrets.randbelow(99999 - 10000 + 1))}"
             })
         return results
 

@@ -1,8 +1,7 @@
 import logging
 import asyncio
 import uuid
-from typing import Dict, Any, Optional
-from backend.app.services.llm_client import llm_client
+from typing import Dict, Any
 from backend.app.agents.orchestrator import (
     AgentMessage, AgentType, orchestrator
 )

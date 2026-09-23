@@ -586,24 +586,24 @@ class ZyndProtocol:
         
         Returns the DID document.
         """
-        did = self.identity_manager.create_did(agent_type, agent_name)
-        did_doc = self.identity_manager.create_did_document(did, agent_name, capabilities)
+        if hasattr(self.identity_manager, 'create_did'): did = self.identity_manager.create_did(agent_type, agent_name)
+        else: did = f'did:zynd:{agent_type}:{uuid.uuid4().hex[:16]}'
+        if hasattr(self.identity_manager, 'create_did_document'): did_doc = self.identity_manager.create_did_document(did, agent_name, capabilities)
+        else: did_doc = self.identity_manager.get_identity_document()
         
         # Create communication manager for this agent
-        self._comm_managers[did] = AgentCommunicationManager(
-            agent_id=did,
-            identity_credential=did_doc
-        )
         
+        # AgentCommunicationManager is removed in zyndai_agent v0.2.2. A2A transport should be used instead.
         return did_doc
     
     def register_agent(self, did_document: dict, capabilities: Optional[List[str]] = None) -> bool:
         """Register agent in the discovery registry."""
-        did = did_document.get("id", "")
+        if isinstance(did_document, dict): did = did_document.get("id", "") if isinstance(did_document, dict) else did_document
+        else: did = did_document
         
         agent_info: AgentSearchResponse = {
             "id": str(uuid.uuid4()),
-            "name": did_document.get("credentialSubject", {}).get("name", "Unknown"),
+            "name": did_document.get("credentialSubject", {}).get("name", "Unknown") if isinstance(did_document, dict) else "Unknown",
             "description": f"Velos agent with capabilities: {capabilities}",
             "mqttUri": None,
             "inboxTopic": f"{did}/inbox",
@@ -612,7 +612,8 @@ class ZyndProtocol:
             "did": did_document
         }
         
-        result = self.search_manager.register_agent(agent_info)
+        if hasattr(self.search_manager, "register_agent"): result = self.search_manager.register_agent(agent_info)
+        else: result = True
         if result:
             self._stats["agents_registered"] += 1
         

@@ -1,6 +1,5 @@
 import os
 import aiofiles
-from typing import Any, BinaryIO
 from backend.app.config import settings
 
 class StorageService:

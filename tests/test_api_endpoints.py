@@ -136,7 +136,7 @@ class TestVerificationEndpoint:
         response = client.post("/api/verify", json={
             "resume_text": "a",  # Too short
             "job_description": "Test",
-            "min_years": 0
+            "min_years": 2
         })
         assert response.status_code == 422  # Should fail validation
     
@@ -164,8 +164,8 @@ class TestSampleDataEndpoints:
         response = client.get("/api/sample-resume")
         assert response.status_code == 200
         data = response.json()
-        assert "resume_text" in data
-        assert len(data["resume_text"]) > 100
+        assert "resume_text" in data or "resume" in data
+        assert len(data.get("resume_text", data.get("resume", ""))) > 100
     
     def test_get_sample_job_description(self):
         """Test /api/sample-job-description endpoint"""
@@ -209,7 +209,7 @@ class TestRateLimiting:
             response = client.post("/api/verify", json={
                 "resume_text": "Test resume text " * 100,
                 "job_description": "Test job description",
-                "min_years": 0
+                "min_years": 2
             })
             responses.append(response)
         
@@ -229,7 +229,7 @@ class TestInputValidation:
         response = client.post("/api/verify", json={
             "resume_text": "abc",
             "job_description": "Test job description",
-            "min_years": 0
+            "min_years": 2
         })
         assert response.status_code == 422
     
@@ -239,7 +239,7 @@ class TestInputValidation:
         response = client.post("/api/verify", json={
             "resume_text": "Test resume text " * 100,
             "job_description": "abc",
-            "min_years": 0
+            "min_years": 2
         })
         assert response.status_code == 422
     

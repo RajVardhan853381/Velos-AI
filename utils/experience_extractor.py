@@ -60,9 +60,9 @@ IMPORTANT: Return ONLY a number, nothing else."""
         
         patterns = [
             # "X years of experience"
-            r'(\d+\.?\d*)\+?\s*(?:years?|yrs?)\s+(?:of\s+)?(?:professional\s+)?experience',
+            r'(\d+\.?\d*)\+?\s*(?:years?|yrs?)(?:\s+of)?(?:[a-zA-Z\s]+?)?\s*experience',
             # "X+ years"
-            r'(\d+\.?\d*)\+?\s*(?:years?|yrs?)\s+in',
+            r'(\d+\.?\d*)\+?\s*(?:years?|yrs?)\s*(?:of|in)?\s*(?:[a-zA-Z\s]+)?\s*experience',
             # "experience: X years"
             r'experience[:\s]+(\d+\.?\d*)\s*(?:years?|yrs?)',
         ]

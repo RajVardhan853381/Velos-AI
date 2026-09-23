@@ -1,9 +1,8 @@
-import os
 import time
 import httpx
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from pydantic import BaseModel
 from backend.app.config import settings
 

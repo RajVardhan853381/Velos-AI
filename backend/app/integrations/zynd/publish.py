@@ -59,13 +59,7 @@ class ZyndPublishService:
         """
         Publishes an anonymized hiring decision log for compliance auditing.
         """
-        payload = {
-            "type": "AuditLog",
-            "org_id": org_id,
-            "action": action,
-            "details": details,
-            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-        }
+
         logger.info(f"Publishing audit log for org {org_id}: {action}")
         
         # Mocking the response

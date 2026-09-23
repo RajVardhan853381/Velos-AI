@@ -1,6 +1,4 @@
 import pytest
-import os
-from unittest.mock import AsyncMock, patch
 from backend.app.integrations.zynd import (
     ZyndSearchService, ZyndPublishService, ZyndPayService
 )

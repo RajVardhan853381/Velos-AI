@@ -18,7 +18,7 @@ async def test_agent_orchestrator_message_routing():
     test_orchestrator = AgentOrchestrator()
     
     # We use GATEKEEPER and INQUISITOR just for enum validity
-    sender = DummyAgent(AgentType.GATEKEEPER, test_orchestrator)
+    DummyAgent(AgentType.GATEKEEPER, test_orchestrator)
     receiver = DummyAgent(AgentType.INQUISITOR, test_orchestrator)
     
     # Start the event loop briefly
@@ -47,7 +47,7 @@ async def test_agent_orchestrator_message_routing():
 @pytest.mark.asyncio
 async def test_agent_orchestrator_drops_unregistered_receivers(caplog):
     test_orchestrator = AgentOrchestrator()
-    sender = DummyAgent(AgentType.GATEKEEPER, test_orchestrator)
+    DummyAgent(AgentType.GATEKEEPER, test_orchestrator)
     
     # Receiver not registered!
     task = asyncio.create_task(test_orchestrator.start_listening())

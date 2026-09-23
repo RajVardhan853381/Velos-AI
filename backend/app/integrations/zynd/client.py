@@ -1,4 +1,5 @@
 import httpx
+from backend.app.config import settings
 import logging
 from typing import Dict, Any, Optional
 
@@ -54,8 +55,6 @@ class ZyndClient:
                     await asyncio.sleep(2 ** attempt)
                     
         raise RuntimeError(f"Failed to execute Zynd API request after {max_retries} attempts.")
-
-from backend.app.config import settings
 
 zynd_client_instance = None
 

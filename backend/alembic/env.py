@@ -8,11 +8,6 @@ from alembic import context
 from backend.app.config import settings
 from backend.app.models.database import Base
 # Import all models to ensure they are registered with Base metadata
-import backend.app.models.enums
-from backend.app.models import (
-    Organization, User, ApiKey, JobPosting, PipelineRun, 
-    PipelineStageResult, UsageRecord, FileUpload
-)
 
 config = context.config
 

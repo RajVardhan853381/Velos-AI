@@ -1,5 +1,4 @@
-import os
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
 

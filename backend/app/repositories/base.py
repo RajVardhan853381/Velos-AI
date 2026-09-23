@@ -1,6 +1,6 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select
 from pydantic import BaseModel
 
 from backend.app.models.database import Base
@@ -43,7 +43,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_data = {c.name: getattr(db_obj, c.name) for c.repr_keys} if hasattr(db_obj, 'repr_keys') else {}
+        obj_data = {c.name: getattr(db_obj, c.name) for c in db_obj.__table__.columns} if hasattr(db_obj.__class__, "__table__") else {}
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:

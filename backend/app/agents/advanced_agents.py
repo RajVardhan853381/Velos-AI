@@ -1,7 +1,6 @@
 import logging
 import asyncio
-from typing import Dict, Any
-from backend.app.agents.orchestrator import AgentMessage, AgentType, orchestrator
+from backend.app.agents.orchestrator import AgentMessage, AgentType
 from backend.app.agents.core_agents import BaseAgent
 from backend.app.integrations.zynd import ZyndPublishService, ZyndSearchService
 

@@ -1,5 +1,4 @@
-from fastapi import Depends, HTTPException, status
-from typing import Generator, Optional
+from typing import Generator
 
 from backend.app.models.database import AsyncSessionLocal
 from sqlalchemy.ext.asyncio import AsyncSession
