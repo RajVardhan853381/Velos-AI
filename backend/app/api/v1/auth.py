@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional
@@ -31,7 +32,7 @@ async def register(user_in: UserRegister, db: AsyncSession = Depends(get_db)):
     # 2. Hash password -> get_password_hash(user_in.password)
     # 3. Create user in DB
     # 4. Return token
-    token = create_access_token("fake-user-id", "fake-org-id", "SUPER_ADMIN")
+    token = create_access_token(uuid.uuid4().hex, uuid.uuid4().hex, "SUPER_ADMIN")
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
@@ -40,7 +41,7 @@ async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db)):
     # user = ...
     # 2. verify_password(user_in.password, user.hashed_password)
     # 3. Return token
-    token = create_access_token("fake-user-id", "fake-org-id", "SUPER_ADMIN")
+    token = create_access_token(uuid.uuid4().hex, uuid.uuid4().hex, "SUPER_ADMIN")
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/refresh")

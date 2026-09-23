@@ -76,7 +76,7 @@ ALLOWED_ORIGINS = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS if os.getenv("ENVIRONMENT") == "production" else ["*"],  # Allow all in dev
+    allow_origins=ALLOWED_ORIGINS,  # Allow all in dev
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -172,6 +172,7 @@ state = AppState()
 class VerifyRequest(BaseModel):
     resume_text: str = Field(..., min_length=50, max_length=50000, description="Resume text (50-50k chars)")
     job_description: str = Field(..., min_length=20, max_length=10000, description="Job description (20-10k chars)")
+    min_years: float = Field(default=2.0, ge=0, description="Minimum years of experience")
     
     @field_validator('resume_text', 'job_description')
     @classmethod
@@ -237,15 +238,15 @@ async def api_health_check():
         process = psutil.Process()
         memory_info = process.memory_info()
         memory_usage_mb = round(memory_info.rss / (1024 * 1024), 1)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f'Optional import failed: {e}')
 
     zynd_sdk = False
     try:
         from zynd import _SDK_AVAILABLE
         zynd_sdk = _SDK_AVAILABLE
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f'Optional import failed: {e}')
 
     return {
         "status": "healthy" if ORCHESTRATOR_AVAILABLE else "degraded",
@@ -282,8 +283,8 @@ async def get_pitch():
         from zynd import _SDK_AVAILABLE, __version__ as _v
         zynd_sdk = _SDK_AVAILABLE
         zynd_version = _v
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f'Optional import failed: {e}')
 
     agents_registered = 0
     credentials_issued = 0
@@ -397,8 +398,8 @@ async def get_status():
                 "supports_official_sdk": sdk_supported,
                 "mode": "official" if sdk_available else "compatibility"
             }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f'Ignored exception: {e}')
     
     return status_response
 
@@ -454,8 +455,8 @@ async def get_agents():
             from zynd import _SDK_AVAILABLE, __version__ as _zynd_ver
             zynd_sdk_available = _SDK_AVAILABLE
             zynd_version = _zynd_ver
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f'Ignored exception: {e}')
 
     return {
         "agents": [
@@ -687,15 +688,15 @@ async def verify_candidate(request: Request, verify_req: VerifyRequest):
             return result
     else:
         # Simulation mode (orchestrator not available)
-        import random
+        import secrets
         print(f"\n⚠️ Running in SIMULATION MODE (Orchestrator not available)")
         print(f"   ORCHESTRATOR_AVAILABLE: {ORCHESTRATOR_AVAILABLE}")
         print(f"   orchestrator object: {orchestrator is not None}\n")
         
         result["simulation_mode"] = True
-        result["status"] = random.choice(["passed", "passed", "passed", "failed"])
-        result["trust_score"] = random.randint(75, 98) if result["status"] == "passed" else random.randint(40, 60)
-        result["skill_match"] = random.randint(70, 95) if result["status"] == "passed" else random.randint(45, 65)
+        result["status"] = secrets.choice(["passed", "passed", "passed", "failed"])
+        result["trust_score"] = (75 + secrets.randbelow(98 - 75 + 1)) if result["status"] == "passed" else (40 + secrets.randbelow(60 - 40 + 1))
+        result["skill_match"] = (70 + secrets.randbelow(95 - 70 + 1)) if result["status"] == "passed" else (45 + secrets.randbelow(65 - 45 + 1))
         result["redacted_resume"] = "[REDACTED NAME]\n[REDACTED EMAIL]\n[REDACTED PHONE]\n\n" + verify_req.resume_text[:500] + "..."
         result["questions"] = [
             "Can you explain your experience with the main technology stack mentioned?",
@@ -866,7 +867,8 @@ async def parse_resume(file: UploadFile = File(...)):
 @app.post("/api/verify-file")
 async def verify_file(
     resume: UploadFile = File(...),
-    job_description: str = Form(...)
+    job_description: str = Form(...),
+    min_years: float = Form(2.0)
 ):
     """
     Upload a resume file and run full verification pipeline.
@@ -1025,10 +1027,10 @@ async def verify_file(
                 result["error"] = str(e)
         else:
             # Simulation mode
-            import random
-            result["status"] = random.choice(["passed", "passed", "passed", "failed"])
-            result["trust_score"] = random.randint(75, 98) if result["status"] == "passed" else random.randint(40, 60)
-            result["skill_match"] = random.randint(70, 95) if result["status"] == "passed" else random.randint(45, 65)
+            import secrets
+            result["status"] = secrets.choice(["passed", "passed", "passed", "failed"])
+            result["trust_score"] = (75 + secrets.randbelow(98 - 75 + 1)) if result["status"] == "passed" else (40 + secrets.randbelow(60 - 40 + 1))
+            result["skill_match"] = (70 + secrets.randbelow(95 - 70 + 1)) if result["status"] == "passed" else (45 + secrets.randbelow(65 - 45 + 1))
             result["redacted_resume"] = "[REDACTED]\n\n" + extracted_text[:500] + "..."
             result["questions"] = [
                 "Can you explain your experience with the main technology stack?",
@@ -1268,7 +1270,7 @@ async def get_blockchain_network_info():
                 lambda: blockchain_mgr.w3.eth.get_balance(blockchain_mgr.account.address)
             )
             balance = f"{blockchain_mgr.w3.from_wei(balance_wei, 'ether'):.4f} ETH"
-        except Exception:
+        except Exception as e:
             balance = "0.0000 ETH"
         
         return {
@@ -1698,7 +1700,7 @@ async def batch_upload(
     request: Request,
     file: UploadFile = File(...),
     job_description: str = Form(""),
-    min_years: int = Form(0)
+    min_years: float = Form(default=2.0),
 ):
     """
     Process a ZIP file containing multiple resumes.
@@ -2101,6 +2103,7 @@ def _evict_oldest_session(sessions: Dict[str, Any]) -> None:
 class ScreenResumeRequest(BaseModel):
     resume_text: str = Field(..., min_length=50, max_length=50000)
     job_description: str = Field(..., min_length=20, max_length=10000)
+    min_years: float = Field(default=2.0, ge=0, description="Minimum years of experience")
 
 @app.post("/api/screen-resume")
 @limiter.limit("30/minute")
@@ -2233,6 +2236,7 @@ async def extract_resume_text(resume_file: UploadFile = File(...)):
 async def screen_resume_file(
     request: Request,
     job_description: str = Form(...),
+    min_years: float = Form(2.0),
     resume_file: UploadFile = File(...)
 ):
     """Upload a PDF/DOCX resume file and screen it against a job description."""
@@ -2270,6 +2274,7 @@ class StartInterviewRequest(BaseModel):
     candidate_name: str = Field(default="Candidate", max_length=100)
     job_role: str = Field(..., min_length=3, max_length=200)
     job_description: str = Field(..., min_length=20, max_length=5000)
+    min_years: float = Field(default=2.0, ge=0, description="Minimum years of experience")
     resume_summary: str = Field(default="", max_length=3000)
 
 class InterviewRespondRequest(BaseModel):
@@ -2646,7 +2651,7 @@ Respond with this EXACT JSON structure:
             assessment_sessions[session_id] = {"session_id": session_id, "assessment": assessment, "created_at": datetime.now().isoformat(), "status": "pending", "role": assess_req.role, "level": assess_req.level, "tech_stack": assess_req.tech_stack}
             public_questions = [{k: v for k, v in q.items() if k not in ("correct_answer", "explanation", "sample_answer", "expected_concepts")} for q in assessment.get("questions", [])]
             return {"success": True, "session_id": session_id, "title": assessment.get("title"), "role": assessment.get("role"), "level": assessment.get("level"), "estimated_minutes": assessment.get("estimated_minutes", 20), "questions": public_questions, "total_questions": len(public_questions), "generated_at": datetime.now().isoformat()}
-        except Exception:
+        except Exception as e:
             raise HTTPException(status_code=503, detail="Assessment generation temporarily unavailable — please retry")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Assessment generation failed: {str(e)}")
@@ -2875,7 +2880,7 @@ async def proctor_websocket(websocket: WebSocket, session_id: str):
                 data = json.loads(text)
             except json.JSONDecodeError:
                 continue  # Ignore malformed frames
-            except Exception:
+            except Exception as e:
                 break  # WebSocket closed or fatal error
             msg_type = data.get("type", "")
             session["frame_count"] += 1
@@ -2949,8 +2954,8 @@ async def proctor_websocket(websocket: WebSocket, session_id: str):
                                         "faces": 1,
                                         "frame": session["frame_count"]
                                     })
-                    except Exception:
-                        pass  # Skip bad frames silently
+                    except Exception as e:
+                        logger.warning(f'Failed to process frame: {e}')
 
                 else:
                     # No CV2 — simulate detection for demo
@@ -2978,8 +2983,8 @@ async def proctor_websocket(websocket: WebSocket, session_id: str):
     except Exception as e:
         try:
             await websocket.send_json({"type": "error", "message": str(e)})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f'Ignored exception: {e}')
 
 
 @app.get("/api/proctor/{session_id}/alerts")
